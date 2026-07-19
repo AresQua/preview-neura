@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Preview Neura</title>
+    <link rel="icon" type="image/png" href="icon.png">
+    <link rel="apple-touch-icon" href="icon.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Finance App">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary-yellow: #ffee00;
+            --bright-yellow: #fff200;
+            --neru-black: #1a1a1a;
+            --bg-dark: #121212;
+            --text-light: #ffffff;
+            --in-color: #2ecc71;
+            --out-color: #e74c3c;
+            --btn-gray: #333333;
+        }
+
+        html, body { 
+            margin: 0; 
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow-x: hidden; 
+            overscroll-behavior-y: contain;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: var(--bg-dark); 
+            color: var(--text-light); 
+        }
+
+        h1, .nav-item, label, #displaySaldo {
+            font-weight: 900 !important;
+        }
+
+        .header-container { 
+            width: 100%; padding: 40px 0; display: flex; flex-direction: column; 
+            justify-content: center; align-items: center; position: relative; 
+            overflow: hidden; min-height: 120px; 
+        }
+        
+        .header-container::before { 
+            content: ''; position: absolute; top: 0; left: 0; width: 200%; height: 100%; 
+            background: linear-gradient(to right, #ffee00, #ffcc00, #ffee00); 
+            background-size: 200% 100%; animation: gradientMove 8s linear infinite; z-index: -1; 
+        }
+        
+        @keyframes gradientMove { 0% { background-position: 0% 0%; } 100% { background-position: -200% 0%; } }
+
+        .header-content { text-align: center; z-index: 2; }
+        .header-content h1 { 
+            color: black; font-size: 1.8em; margin: 0; 
+            letter-spacing: 2px; font-weight: 900;
+        }
+
+        #displaySaldo {
+            display: inline-block; margin-top: 10px; color: black; font-weight: 900; 
+            font-size: 1.1em; background: rgba(255,255,255,0.3); 
+            padding: 5px 15px; border-radius: 20px;
+        }
+
+        .category-nav {
+            display: flex; background: var(--neru-black); position: sticky; top: 0; z-index: 100;
+            border-bottom: 2px solid #333;
+        }
+        .nav-item {
+            flex: 1; padding: 18px 10px; text-align: center; font-weight: 900; cursor: pointer;
+            transition: 0.3s; color: #666; font-size: 0.85em; letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        .nav-item.active { color: var(--primary-yellow); border-bottom: 4px solid var(--primary-yellow); }
+
+        .view-slider {
+            display: flex; width: 200%; transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            touch-action: pan-y;
+        }
+        .view-page { width: 50%; box-sizing: border-box; }
+
+        .main-card {
+            background: var(--neru-black); margin: 20px 15px 30px 15px;
+            padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            position: relative; z-index: 10; border-top: 5px solid var(--primary-yellow);
+        }
+
+        .main-card-2 {
+            background: var(--neru-black); margin: 20px 15px 30px 15px;
+            padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            position: relative; z-index: 10;
+        }
+
+        .type-selector { 
+            display: flex; background: var(--btn-gray); 
+            padding: 5px; border-radius: 15px; margin-bottom: 25px; position: relative;
+            overflow: hidden;
+        }
+        
+        .type-btn {
+            flex: 1; padding: 14px; text-align: center; border-radius: 12px;
+            cursor: pointer; font-family: 'Inter', sans-serif;
+            font-weight: 900 !important; font-size: 0.85em; z-index: 2;
+            transition: color 0.3s ease; color: #aaa;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .type-btn.active { color: white; }
+        
+        .selection-indicator {
+            position: absolute; width: calc(50% - 5px); height: calc(100% - 10px);
+            top: 5px; border-radius: 10px; z-index: 1; display: none;
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s ease;
+        }
+
+        .active-in .selection-indicator { display: block; transform: translateX(0); background: var(--in-color); }
+        .active-out .selection-indicator { display: block; transform: translateX(100%); background: var(--out-color); }
+
+        .input-group { margin-bottom: 18px; }
+        label { display: block; margin-bottom: 8px; color: var(--primary-yellow); font-size: 0.8em; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; }
+        
+        input, textarea {
+            width: 100%; padding: 14px; border-radius: 12px; border: 2px solid #333;
+            background: #252525; color: white; box-sizing: border-box; font-size: 16px;
+            font-family: 'Inter', sans-serif; font-weight: 700;
+        }
+
+        input:focus, textarea:focus { outline: none; border-color: var(--primary-yellow); }
+
+        .submit-btn {
+            width: 100%; padding: 18px; background: var(--primary-yellow);
+            color: black; border: none; border-radius: 12px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 900 !important; font-size: 1.1em; cursor: pointer;
+            text-transform: uppercase; letter-spacing: 2px;
+            margin-top: 10px;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 4px 0 #b3a700;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .submit-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #b3a700; }
+
+        .history-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 12px 15px; cursor: pointer; border-bottom: 1px solid #333; color: #ccc;
+        }
+        .history-item:hover { background: #333; color: var(--primary-yellow); }
+        .delete-history { color: #e74c3c; padding: 5px 10px; font-weight: 900; font-size: 18px; }
+
+        .empty-state { text-align: center; padding: 50px 20px; color: #555; }
+        .empty-state i { font-size: 4em; margin-bottom: 15px; }
+
+        .triangle-container { 
+            position: absolute; clip-path: polygon(50% 0%, 0% 100%, 100% 100%); 
+            opacity: 0.8; z-index: 0; pointer-events: none; 
+        }
+
+        @keyframes triangleMove { 
+            0% { transform: translate(0, 0) scale(0.5) rotate(0deg); opacity: 0; } 
+            50% { transform: translate(50px, -50px) scale(1) rotate(180deg); opacity: 0.6; } 
+            100% { transform: translate(100px, 100px) scale(0.5) rotate(360deg); opacity: 0; } 
+        }
+
+        .click-particle { 
+            position: absolute; clip-path: polygon(50% 0%, 0% 100%, 100% 100%); 
+            z-index: 9999; pointer-events: none; 
+        }
+        
+        .table-container {
+            width: 97%;
+        
+            margin: 0 auto;
+        
+            overflow-x: auto;
+        
+            border-radius: 18px;
+        
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .tabel {
+            width: 97%;
+            margin: 20px 15px 30px 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            position: relative;
+            z-index: 10;
+            border-collapse: collapse;
+            font-size: 0.75em;
+            color: white;
+            min-width: 600px;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+
+            margin: 15px 0 30px 0;
+        }
+
+        .pagination button {
+            background: var(--btn-gray);
+            border: none;
+            color: white;
+
+            width: 40px;
+            height: 40px;
+
+            border-radius: 10px;
+            font-weight: 900;
+            cursor: pointer;
+
+            transition: 0.2s;
+        }
+
+        .pagination button:hover {
+            background: var(--primary-yellow);
+            color: black;
+        }
+
+        #pageInfo {
+            font-size: 0.85em;
+            font-weight: 700;
+            color: #aaa;
+        }
+        
+        .toast {
+            position: fixed;
+            bottom: 50%;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            
+            background: var(--neru-black);
+            color: var(--primary-yellow);
+            
+            padding: 14px 20px;
+            border-radius: 12px;
+            
+            font-family: 'Inter', sans-serif;
+            font-weight: 700;
+            font-size: 0.85em;
+            letter-spacing: 1px;
+            
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border: 1px solid #333;
+            
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 9999;
+        }
+        
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .summary-box {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .summary-card {
+            background: #252525;
+            border-radius: 14px;
+            padding: 12px;
+            text-align: center;
+            border: 1px solid #333;
+        }
+
+        .summary-title {
+            font-size: 0.7em;
+            font-weight: 900;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+            color: #888;
+        }
+
+        .summary-value {
+            font-size: 0.9em;
+            font-weight: 900;
+        }
+
+        .summary-card.pemasukan .summary-value {
+            color: var(--in-color);
+        }
+
+        .summary-card.pengeluaran .summary-value {
+            color: var(--out-color);
+        }
+
+        .summary-card.selisih.positive .summary-value {
+            color: var(--in-color);
+        }
+
+        .summary-card.selisih.negative .summary-value {
+            color: var(--out-color);
+        }
+
+        .summary-card.selisih.zero .summary-value {
+            color: #aaa;
+        }
+
+        @media screen and (max-width: 480px) {
+            th, td {
+                padding: 6px 4px !important; /* Padding lebih rapat */
+                font-size: 10px; /* Font lebih kecil sedikit */
+            }
+            
+            .header-container {
+                padding: 40px 0; /* Header lebih pendek di mobile */
+            }
+
+            .header-content h1 {
+                font-size: 1.2rem;
+            }
+
+            .tabel {
+                min-width: 400px;
+                width: 93%;
+            }
+
+            .summary-box {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<header class="header-container" id="header">
+    <div class="header-content">
+        <h1>MY FINANCIAL REPORT</h1>
+        <div id="displaySaldo">Loading Saldo...</div>
+    </div>
+</header>
+
+<nav class="category-nav">
+    <div class="nav-item active" id="tabKirim" onclick="switchPage(0)">KIRIM LAPORAN</div>
+    <div class="nav-item" id="tabLihat" onclick="switchPage(1)">LIHAT CATATAN</div>
+</nav>
+
+<div class="view-slider" id="mainSlider">
+    
+    <div class="view-page" id="pageKirim">
+        <div class="main-card">
+            <div class="type-selector" id="typeSelector">
+                <div class="selection-indicator" id="indicator"></div>
+                <div class="type-btn" id="btnIn" onclick="setType('pemasukan')">PEMASUKAN</div>
+                <div class="type-btn" id="btnOut" onclick="setType('pengeluaran')">PENGELUARAN</div>
+            </div>
+
+            <div style="display: flex; gap: 12px;">
+                <div class="input-group" style="flex: 1;">
+                    <label>Tanggal</label>
+                    <input type="date" id="tgl">
+                </div>
+                <div class="input-group" style="flex: 1;">
+                    <label>Waktu</label>
+                    <input type="time" id="jam">
+                </div>
+            </div>
+
+            <div class="input-group" style="position: relative;">
+                <label>Jenis Laporan</label>
+                <input type="text" id="jenis" placeholder="Ketik jenis..." autocomplete="off" onfocus="showHistory()" oninput="filterHistory()">
+                <div id="custom-history-dropdown" style="display: none; position: absolute; width: 100%; background: #252525; border: 1px solid #444; border-radius: 10px; z-index: 100; max-height: 200px; overflow-y: auto; margin-top: 5px;"></div>
+            </div>
+
+            <div class="input-group">
+                <label>Nominal</label>
+                <input type="text" id="nominal" placeholder="0" inputmode="numeric" pattern="[0-9]*">
+            </div>
+
+            <div class="input-group">
+                <label>Keterangan</label>
+                <textarea id="keterangan" rows="2" placeholder="Detail catatan..."></textarea>
+            </div>
+
+            <button class="submit-btn" id="btnSimpan" onclick="kirimData()">SIMPAN DATA</button>
+        </div>
+    </div>
+
+    <div class="view-page" id="pageLihat">
+        <div class="main-card" style="padding: 10px; overflow-x: auto;">
+            <div class="main-card-2" style="padding: 15px; margin-bottom: 15px;">
+                <div style="display: flex; gap: 5px; margin-bottom: 15px; overflow-x: auto; padding-bottom: 5px;">
+                    <button class="p-btn" onclick="updateChartPeriod('1D', this)">1D</button>
+                    <button class="p-btn" onclick="updateChartPeriod('1W', this)">1W</button>
+                    <button class="p-btn" onclick="updateChartPeriod('1M', this)">1M</button>
+                    <button class="p-btn" onclick="updateChartPeriod('3M', this)">3M</button> <button class="p-btn" onclick="updateChartPeriod('1Y', this)">1Y</button>
+                    <button class="p-btn" onclick="updateChartPeriod('CUSTOM', this)">CUSTOM</button>
+                </div>
+
+                <div id="customPeriodBox" style="display: none; gap: 10px; margin-top: 10px; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 10px; margin-bottom: 10px;">
+                    <div style="flex: 1;">
+                        <label style="font-size: 9px; color: #888;">DARI:</label>
+                        <input type="date" id="chartStart" onchange="updateChartPeriod('CUSTOM')" style="font-size: 11px; padding: 5px;">
+                    </div>
+                    <div style="flex: 1;">
+                        <label style="font-size: 9px; color: #888;">SAMPAI:</label>
+                        <input type="date" id="chartEnd" onchange="updateChartPeriod('CUSTOM')" style="font-size: 11px; padding: 5px;">
+                    </div>
+                </div>
+                
+                <div style="height: 250px; position: relative;">
+                    <canvas id="financeChart"></canvas>
+                </div>
+
+                <div class="summary-box">
+    
+                    <div class="summary-card pemasukan">
+                        <div class="summary-title">PEMASUKAN</div>
+                        <div class="summary-value" id="sumMasuk">Rp 0</div>
+                    </div>
+
+                    <div class="summary-card pengeluaran">
+                        <div class="summary-title">PENGELUARAN</div>
+                        <div class="summary-value" id="sumKeluar">Rp 0</div>
+                    </div>
+
+                    <div class="summary-card selisih" id="selisihCard">
+                        <div class="summary-title">SELISIH</div>
+                        <div class="summary-value" id="sumSelisih">Rp 0</div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <style>
+            .p-btn {
+                background: var(--btn-gray); border: none; color: white;
+                padding: 5px 12px; border-radius: 8px; font-size: 11px;
+                font-weight: 900; cursor: pointer; transition: 0.3s;
+            }
+            .p-btn.active { background: var(--primary-yellow); color: black; }
+        </style>
+
+            <div class="table-container">
+            <table class="tabel">
+                <thead>
+                    <tr style="background: var(--btn-gray); color: var(--primary-yellow);">
+                        <th style="padding: 8px; border: 1px solid #444;"><button onclick="toggleFilter('date')" style="background:none; border:none; color:inherit; font-weight:900; font-size:1em;">TGL</button></th>
+                        <th style="padding: 8px; border: 1px solid #444;"><button onclick="toggleFilter('time')" style="background:none; border:none; color:inherit; font-weight:900; font-size:1em;">JAM</button></th>
+                        <th style="padding: 8px; border: 1px solid #444;"><button onclick="toggleFilter('jenis')" style="background:none; border:none; color:inherit; font-weight:900; font-size:1em;">JENIS</button></th>
+                        <th style="padding: 8px; border: 1px solid #444;"><button onclick="toggleFilter('keterangan')" style="background:none; border:none; color:inherit; font-weight:900; font-size:1em;">KET</th>
+                        <th style="padding: 8px; border: 1px solid #444;">MASUK</th>
+                        <th style="padding: 8px; border: 1px solid #444;">KELUAR</th>
+                        <th style="padding: 8px; border: 1px solid #444;"><button onclick="toggleFilter('saldo')" style="background:none; border:none; color:inherit; font-weight:900; font-size:1em;">SALDO</button></th>
+                    </tr>
+                    <tr id="filterRow" style="display: none; background: #252525;">
+                        <th style="padding: 5px;">
+                            <input type="date" id="fDateMin" oninput="applyCanggih()" style="font-size:9px; width:100%; margin-bottom:2px;" placeholder="Dari">
+                            <input type="date" id="fDateMax" oninput="applyCanggih()" style="font-size:9px; width:100%;" placeholder="Sampai">
+                        </th>
+                        <th style="padding: 5px;">
+                            <input type="time" id="fTimeMin" oninput="applyCanggih()" style="font-size:9px; width:100%; margin-bottom:2px;">
+                            <input type="time" id="fTimeMax" oninput="applyCanggih()" style="font-size:9px; width:100%;">
+                        </th>
+                        <th style="padding: 5px;">
+                            <select id="fJenis" onchange="applyCanggih()" style="width:100%; background:#333; color:white; font-size:10px;"></select>
+                        </th>
+                        <th style="padding: 5px;">
+                            <input type="text" id="fKet" oninput="applyCanggih()" placeholder="..." style="font-size:10px; padding:4px;">
+                        </th>
+                        <th></th>
+                        <th></th>
+                        <th style="padding: 5px;">
+                            <input type="number" id="fSaldoMin" oninput="applyCanggih()" placeholder="Min" style="font-size:9px; width:100%; margin-bottom:2px;">
+                            <input type="number" id="fSaldoMax" oninput="applyCanggih()" placeholder="Max" style="font-size:9px; width:100%;">
+                        </th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+            </div>
+            <div class="pagination">
+
+                <button onclick="changePage(-1)">
+                    ◀
+                </button>
+
+                <span id="pageInfo">
+                    Halaman 1
+                </span>
+
+                <button onclick="changePage(1)">
+                    ▶
+                </button>
+
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    let selectedType = '';
+    let currentPage = 0;
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxuFf704Wmajc6ZaZ0JRJt2YmVL989cmP_3Dk4rbeBx9JfZ0nloPV8dfDGO9gu0rTub/exec"; 
+    const colorPalette = ["#ffee00", "#ffffff", "#ffcc00", "#e0e0e0"];
+    const header = document.getElementById('header');
+
+    let touchstartX = 0;
+    let touchendX = 0;
+    
+    document.addEventListener('touchstart', e => { touchstartX = e.changedTouches[0].screenX; });
+    document.addEventListener('touchend', e => { touchendX = e.changedTouches[0].screenX; handleGesture(); });
+
+    function switchPage(index) {
+        currentPage = index;
+        const slider = document.getElementById('mainSlider');
+        const tabKirim = document.getElementById('tabKirim');
+        const tabLihat = document.getElementById('tabLihat');
+
+        if (index === 0) {
+            slider.style.transform = 'translateX(0%)';
+            tabKirim.classList.add('active');
+            tabLihat.classList.remove('active');
+        } else {
+            slider.style.transform = 'translateX(-50%)';
+            tabLihat.classList.add('active');
+            tabKirim.classList.remove('active');
+        }
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    document.getElementById('nominal').addEventListener('input', function(e) {
+        let value = this.value.replace(/\D/g, "");
+        if (value) { this.value = parseInt(value).toLocaleString('id-ID'); }
+    });
+
+    async function updateSaldoHeader() {
+        try {
+            const response = await fetch(WEB_APP_URL);
+            const data = await response.json();
+            document.getElementById('displaySaldo').innerText = "Saldo: " + data.formattedSaldo;
+        } catch (e) {
+            document.getElementById('displaySaldo').innerText = "Saldo: Rp 0";
+        }
+    }
+
+    function showHistory() {
+        const history = JSON.parse(localStorage.getItem('jenisHistory') || "[]");
+        const dropdown = document.getElementById('custom-history-dropdown');
+        if (history.length === 0) { dropdown.style.display = 'none'; return; }
+        dropdown.innerHTML = history.map((item, index) => `
+            <div class="history-item">
+                <span onclick="selectHistory('${item}')" style="font-weight:700">${item}</span>
+                <div class="delete-history" onclick="deleteHistoryItem(event, ${index})">&times;</div>
+            </div>
+        `).join('');
+        dropdown.style.display = 'block';
+    }
+
+    function selectHistory(val) {
+        document.getElementById('jenis').value = val;
+        document.getElementById('custom-history-dropdown').style.display = 'none';
+    }
+
+    function deleteHistoryItem(event, index) {
+        event.stopPropagation();
+        let history = JSON.parse(localStorage.getItem('jenisHistory') || "[]");
+        history.splice(index, 1);
+        localStorage.setItem('jenisHistory', JSON.stringify(history));
+        showHistory();
+    }
+
+    function filterHistory() {
+        const val = document.getElementById('jenis').value.toLowerCase();
+        const items = document.querySelectorAll('.history-item');
+        let hasVisible = false;
+        items.forEach(item => {
+            const text = item.querySelector('span').innerText.toLowerCase();
+            if (text.includes(val)) { item.style.display = 'flex'; hasVisible = true; }
+            else { item.style.display = 'none'; }
+        });
+        document.getElementById('custom-history-dropdown').style.display = hasVisible ? 'block' : 'none';
+    }
+
+    document.addEventListener('click', function(e) {
+        const dropdown = document.getElementById('custom-history-dropdown');
+        const input = document.getElementById('jenis');
+        if (e.target !== input && !dropdown.contains(e.target)) { dropdown.style.display = 'none'; }
+    });
+
+    window.onload = () => {
+        const now = new Date();
+        document.getElementById('tgl').value = now.toISOString().split('T')[0];
+        document.getElementById('jam').value = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+        for (let i = 0; i < 20; i++) createRandomTriangle();
+        updateSaldoHeader();
+    };
+
+    function setType(t) {
+        const container = document.getElementById('typeSelector');
+        const indicator = document.getElementById('indicator');
+        const bIn = document.getElementById('btnIn');
+        const bOut = document.getElementById('btnOut');
+        indicator.style.transition = selectedType === '' ? 'none' : 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s ease';
+        selectedType = t;
+        if(t === 'pemasukan') { container.className = 'type-selector active-in'; bIn.classList.add('active'); bOut.classList.remove('active'); }
+        else { container.className = 'type-selector active-out'; bOut.classList.add('active'); bIn.classList.remove('active'); }
+    }
+
+    function resetForm() {
+        document.getElementById('nominal').value = '';
+        document.getElementById('keterangan').value = '';
+        document.getElementById('jenis').value = '';
+        selectedType = '';
+        document.getElementById('typeSelector').className = 'type-selector';
+        document.getElementById('btnIn').classList.remove('active');
+        document.getElementById('btnOut').classList.remove('active');
+    }
+
+    async function kirimData() {
+        const nominalStr = document.getElementById('nominal').value.replace(/\./g, "");
+        const jenis = document.getElementById('jenis').value;
+
+        if(!selectedType || !nominalStr || !jenis) {
+            showToast("Harap lengkapi data!");
+            return;
+        }
+
+        const btn = document.getElementById('btnSimpan');
+        const originalText = btn.innerText;
+        btn.innerText = "MENGIRIM...";
+        btn.disabled = true;
+
+        const formData = new URLSearchParams();
+        formData.append('tanggal', document.getElementById('tgl').value);
+        formData.append('waktu', document.getElementById('jam').value);
+        formData.append('jenis', jenis);
+        formData.append('keterangan', document.getElementById('keterangan').value);
+        formData.append('nominal', nominalStr);
+        formData.append('tipe', selectedType);
+
+        showToast("Ini cuma preview, tidak bisa kirim data");
+        let history = JSON.parse(localStorage.getItem('jenisHistory') || "[]");
+        if (jenis && !history.includes(jenis)) {
+            history.push(jenis);
+            localStorage.setItem('jenisHistory', JSON.stringify(history));
+        }
+        resetForm();
+
+        setTimeout(async () => {
+            await updateSaldoHeader(); 
+            btn.innerText = originalText;
+            btn.disabled = false;
+        }, 3000); 
+    }
+
+    function createRandomTriangle() {
+        const triangle = document.createElement('div');
+        triangle.classList.add('triangle-container');
+        const size = Math.random() * 20 + 10;
+        triangle.style.width = `${size}px`; triangle.style.height = `${size}px`;
+        triangle.style.left = `${Math.random() * header.offsetWidth}px`;
+        triangle.style.top = `${Math.random() * header.offsetHeight}px`;
+        triangle.style.background = colorPalette[Math.floor(Math.random() * colorPalette.length)];
+        triangle.style.animation = `triangleMove ${Math.random() * 10 + 5}s ease-in-out infinite`;
+        header.appendChild(triangle);
+    }
+
+    document.addEventListener('click', (e) => {
+        for (let i = 0; i < 5; i++) {
+            const p = document.createElement('div');
+            p.classList.add('click-particle');
+            const size = Math.random() * 15 + 5;
+            p.style.width = `${size}px`; p.style.height = `${size}px`;
+            p.style.background = colorPalette[Math.floor(Math.random() * colorPalette.length)];
+            p.style.left = `${e.pageX}px`; p.style.top = `${e.pageY}px`;
+            document.body.appendChild(p);
+            p.animate([{ transform: `translate(0, 0) scale(1) rotate(0deg)`, opacity: 1 }, { transform: `translate(${Math.random() * 100 - 50}px, ${Math.random() * 100 - 50}px) scale(0) rotate(360deg)`, opacity: 0 }], { duration: 500 });
+            setTimeout(() => p.remove(), 500);
+        }
+    });
+
+    let myChart;
+
+    function initChart(data) {
+        const ctx = document.getElementById('financeChart').getContext('2d');
+        
+        // Gradient untuk area bawah garis ala saham
+        const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+        gradient.addColorStop(0, 'rgba(255, 238, 0, 0.3)');
+        gradient.addColorStop(1, 'rgba(255, 238, 0, 0)');
+
+        if (myChart) myChart.destroy();
+
+        myChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: data.map(r => r.tgl),
+                datasets: [{
+                    label: 'Saldo',
+                    data: data.map(r => r.saldo),
+                    borderColor: '#ffee00',
+                    borderWidth: 3,
+                    fill: true,
+                    backgroundColor: gradient,
+                    tension: 0.4, // Membuat garis melengkung (smooth)
+                    pointRadius: 2,
+                    pointBackgroundColor: '#ffee00'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { display: false }, ticks: { color: '#666', font: { size: 10 } } },
+                    y: { grid: { color: '#333' }, ticks: { color: '#666', font: { size: 10 } } }
+                }
+            }
+        });
+    }
+
+    function updateChartPeriod(period, element) {
+        // Atur tombol aktif
+        document.querySelectorAll('.p-btn').forEach(b => b.classList.remove('active'));
+        if (element) element.classList.add('active');
+
+        // Show/Hide box custom
+        const customBox = document.getElementById('customPeriodBox');
+        customBox.style.display = (period === 'CUSTOM') ? 'flex' : 'none';
+
+        const now = new Date();
+        let startDate = new Date();
+        let endDate = new Date();
+
+        if (period === '1D') {
+            startDate.setHours(0, 0, 0, 0);
+        } else if (period === '1W') {
+            startDate.setDate(now.getDate() - 7);
+        } else if (period === '1M') {
+            startDate.setMonth(now.getMonth() - 1);
+        } else if (period === '3M') {
+            startDate.setMonth(now.getMonth() - 3); // LOGIKA 3 BULAN
+        } else if (period === '1Y') {
+            startDate.setFullYear(now.getFullYear() - 1);
+        } else if (period === 'CUSTOM') {
+            const sVal = document.getElementById('chartStart').value;
+            const eVal = document.getElementById('chartEnd').value;
+            if (!sVal || !eVal) return; // Tunggu sampai kedua tanggal diisi
+            startDate = new Date(sVal);
+            endDate = new Date(eVal);
+            endDate.setHours(23, 59, 59);
+        }
+
+        // Filter data (Gunakan urutan asli spreadsheet agar alur saldo di grafik benar)
+        const filtered = fullData.filter(r => {
+            const d = new Date(r[0]);
+            return d >= startDate && d <= endDate;
+        });
+
+        const chartData = filtered.map(r => ({
+            tgl: r[0].split('-').slice(1).reverse().join('/'),
+            saldo: parseFloat(r[6].replace(/\./g, '')) || 0
+        }));
+
+        if (chartData.length > 0) initChart(chartData);
+    }
+
+    function updateSummary(data) {
+
+        let totalMasuk = 0;
+        let totalKeluar = 0;
+
+        data.forEach(r => {
+
+            const masuk = parseFloat(r[4].replace(/\./g, '')) || 0;
+            const keluar = parseFloat(r[5].replace(/\./g, '')) || 0;
+
+            totalMasuk += masuk;
+            totalKeluar += keluar;
+        });
+
+        const selisih = totalMasuk - totalKeluar;
+
+        document.getElementById('sumMasuk').innerText =
+            'Rp ' + totalMasuk.toLocaleString('id-ID');
+
+        document.getElementById('sumKeluar').innerText =
+            'Rp ' + totalKeluar.toLocaleString('id-ID');
+
+        document.getElementById('sumSelisih').innerText =
+            (selisih > 0 ? '+ ' : selisih < 0 ? '- ' : '') +
+            'Rp ' + Math.abs(selisih).toLocaleString('id-ID');
+
+        const card = document.getElementById('selisihCard');
+
+        card.classList.remove('positive', 'negative', 'zero');
+
+        if (selisih > 0) {
+            card.classList.add('positive');
+        } else if (selisih < 0) {
+            card.classList.add('negative');
+        } else {
+            card.classList.add('zero');
+        }
+    }
+
+    // Tambahkan variabel global untuk menyimpan data filter
+    let currentFilteredData = [];
+    let currentPageTable = 1;
+    const rowsPerPage = 20;
+
+    function applyCanggih() {
+        const dateMin = document.getElementById('fDateMin').value;
+        const dateMax = document.getElementById('fDateMax').value;
+        const timeMin = document.getElementById('fTimeMin').value;
+        const timeMax = document.getElementById('fTimeMax').value;
+        const fJenis = document.getElementById('fJenis').value;
+        const fKet = document.getElementById('fKet').value.toLowerCase();
+        const saldoMin = parseFloat(document.getElementById('fSaldoMin').value) || -Infinity;
+        const saldoMax = parseFloat(document.getElementById('fSaldoMax').value) || Infinity;
+
+        const filtered = fullData.filter(r => {
+            const rowDate = r[0]; // Format YYYY-MM-DD
+            const matchDate = (dateMin ? rowDate >= dateMin : true) && 
+                            (dateMax ? rowDate <= dateMax : true);
+
+            // Logika Filter Jam (r[1])
+            const rowTime = r[1]; // Format HH:mm
+            const matchTime = (timeMin ? rowTime >= timeMin : true) && 
+                            (timeMax ? rowTime <= timeMax : true);
+
+            // Logika Filter Jenis & Keterangan
+            const matchJenis = fJenis ? r[2] === fJenis : true;
+            const matchKet = fKet ? r[3].toLowerCase().includes(fKet) : true;
+
+            // Logika Filter Saldo (r[6])
+            // Karena data dari getDisplayValues berbentuk string "10.000", kita bersihkan dulu
+            const rowSaldo = parseFloat(r[6].replace(/\./g, '')) || 0;
+            const matchSaldo = (rowSaldo >= saldoMin) && (rowSaldo <= saldoMax);
+            return matchDate && matchTime && matchJenis && matchKet && matchSaldo;
+            
+        });
+
+        currentFilteredData = filtered; // Simpan ke variabel global
+        currentPageTable = 1;
+        renderCanggih([...filtered].reverse());
+        updateSummary(filtered);
+        
+        // Jika sedang dalam mode CUSTOM, otomatis update grafiknya juga setiap kali filter berubah
+        const customBtn = Array.from(document.querySelectorAll('.p-btn')).find(b => b.innerText === 'CUSTOM');
+        if (customBtn && customBtn.classList.contains('active')) {
+            updateChartPeriod('CUSTOM', customBtn);
+        }
+    }
+
+    let fullData = [];
+
+    async function loadTableData() {
+        const tbody = document.getElementById('tableBody');
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:20px;">Memuat Data...</td></tr>';
+        try {
+            const res = await fetch(WEB_APP_URL);
+            const json = await res.json();
+            fullData = json.allData;
+            renderCanggih([...fullData].reverse());
+            updateSummary(fullData);
+            setTimeout(() => {
+                updateChartPeriod('1W'); 
+            }, 100);
+            populateJenisFilter(fullData);
+        } catch (e) { tbody.innerHTML = '<tr><td colspan="7" style="color:red; text-align:center;">Gagal koneksi.</td></tr>'; }
+    }
+
+    function toggleFilter() {
+        const row = document.getElementById('filterRow');
+        row.style.display = row.style.display === 'none' ? 'table-row' : 'none';
+    }
+
+    function populateJenisFilter(data) {
+        const select = document.getElementById('fJenis');
+        const unik = [...new Set(data.map(r => r[2]))];
+        select.innerHTML = '<option value="">Semua</option>' + unik.map(j => `<option value="${j}">${j}</option>`).join('');
+    }
+
+    function renderCanggih(data) {
+
+        currentFilteredData = data;
+
+        const start = (currentPageTable - 1) * rowsPerPage;
+        const end = start + rowsPerPage;
+
+        const paginatedData = data.slice(start, end);
+
+        document.getElementById('tableBody').innerHTML =
+            paginatedData.map(r => {
+
+                let tglTampil = r[0];
+
+                if (tglTampil.includes('-')) {
+                    tglTampil = tglTampil.split('-').reverse().join('/');
+                }
+
+                return `
+                <tr style="border-bottom: 1px solid #333;">
+                    <td style="padding: 8px;">${tglTampil}</td>
+                    <td style="padding: 8px;">${r[1]}</td>
+                    <td style="padding: 8px;">${r[2]}</td>
+                    <td style="padding: 8px;">${r[3]}</td>
+                    <td style="padding: 8px; color:var(--in-color)">
+                        ${r[4] != "0" ? r[4] : ''}
+                    </td>
+                    <td style="padding: 8px; color:var(--out-color)">
+                        ${r[5] != "0" ? r[5] : ''}
+                    </td>
+                    <td style="padding: 8px; font-weight:bold;">
+                        ${r[6]}
+                    </td>
+                </tr>
+                `;
+            }).join('');
+
+        updatePageInfo();
+    }
+
+    function changePage(direction) {
+
+        const totalPages =
+            Math.ceil(currentFilteredData.length / rowsPerPage);
+
+        currentPageTable += direction;
+
+        if (currentPageTable < 1)
+            currentPageTable = 1;
+
+        if (currentPageTable > totalPages)
+            currentPageTable = totalPages;
+
+        renderCanggih(currentFilteredData);
+    }
+
+    function updatePageInfo() {
+
+        const totalPages =
+            Math.ceil(currentFilteredData.length / rowsPerPage);
+
+        document.getElementById('pageInfo').innerText =
+            `Halaman ${currentPageTable} / ${totalPages || 1}`;
+    }
+
+    // Interceptor Switch Page agar refresh otomatis
+    const oldSwitch = switchPage;
+    switchPage = function(i) {
+        oldSwitch(i);
+        if (i === 1) loadTableData();
+};
+
+function showToast(msg) {
+    const t = document.createElement("div");
+    t.className = "toast";
+    t.innerText = msg;
+
+    document.body.appendChild(t);
+
+    setTimeout(() => t.classList.add("show"), 10);
+
+    setTimeout(() => {
+        t.classList.remove("show");
+        setTimeout(() => t.remove(), 300);
+    }, 2000);
+}
+
+</script>
+</body>
+
+</html>
