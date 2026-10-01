@@ -1,7 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html data-base="dark" data-accent="neru">
 <head>
-    <title>Preview Neura</title>
+    <title>Neura</title>
+    <link rel="manifest" href="manifest.json">
     <link rel="icon" type="image/png" href="icon.png">
     <link rel="apple-touch-icon" href="icon.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -11,17 +12,111 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Set tema dari localStorage SEBELUM CSS kegambar, biar nggak ada kedipan balik ke default
+        (function(){
+            const b = localStorage.getItem('neura-theme-base') || 'dark';
+            const a = localStorage.getItem('neura-theme-accent') || 'neru';
+            document.documentElement.setAttribute('data-base', b);
+            document.documentElement.setAttribute('data-accent', a);
+        })();
+    </script>
     <style>
+        /* ===================================================================
+           SISTEM TEMA — 3 LAPIS
+           1) :root              → warna universal, SAMA di semua tema (jarang/nggak pernah berubah)
+           2) [data-base]        → BASE THEME: struktur terang/gelap (bg, teks, abu-abu, shadow)
+           3) [data-accent]      → CUSTOM THEME: identitas warna/aksen karakter (kuning Neru, gradient Sekai, dst)
+
+           Catatan nama var: dulu beberapa var custom-theme sempat dinamain spesifik
+           gaya Akita Neru (--primary-yellow, dst). Sekarang udah digeneralisir jadi
+           --accent-* (accent-primary/bright/secondary/shadow/particle) biar netral
+           dan gampang dipakai accent lain juga, bukan cuma Neru & Sekai.
+
+           Kombinasi dipasang lewat 2 atribut di <html>, contoh:
+               <html data-base="dark" data-accent="neru">   → tema "Neru-Dark" (default)
+               <html data-base="light" data-accent="neru">  → tema "Neru-Light"
+               <html data-base="dark" data-accent="sekai">  → tema "Sekai-Dark"
+               <html data-base="light" data-accent="sekai"> → tema "Sekai-Light"
+           Base & accent independen — nambah accent baru nanti tinggal nambah satu blok
+           [data-accent="..."] baru, nggak perlu sentuh base atau bikin ulang 4 kombinasi.
+           =================================================================== */
+
         :root {
-            --primary-yellow: #ffee00;
-            --bright-yellow: #fff200;
-            --neru-black: #1a1a1a;
-            --bg-dark: #121212;
-            --text-light: #ffffff;
+            /* warna semantik yang nggak ikut ganti tema (universal di semua base & accent) */
             --in-color: #2ecc71;
             --out-color: #e74c3c;
-            --btn-gray: #333333;
         }
+
+        /* ---------- BASE THEME: DARK (default) ---------- */
+        [data-base="dark"] {
+            --bg-dark: #121212;           /* background utama halaman */
+            --baground-dark: #252525;     /* permukaan kartu/section */
+            --surface-deep: #1a1a1a;        /* permukaan paling dalam (panel, clock-face, dsb) */
+            --text-light: #ffffff;        /* warna teks utama */
+            --btn-gray: #333333;          /* abu-abu tombol/hover */
+            --border-line: #444;
+            --bg-items: #333;
+            --muted-gray: #666;
+            --soft-gray: #aaa;
+            --dim-gray: #555;
+            --label-gray: #888;
+            --light-gray: #ccc;
+            --shadow-color: rgba(0,0,0,0.5);
+            --shadow-heavy: rgba(0,0,0,0.8);
+            --overlay-shine: rgba(255,255,255,0.3);
+            --overlay-faint: rgba(255,255,255,0.05);
+            --on-accent-color: #000000;   /* warna teks di ATAS permukaan solid --accent-primary (header, tombol) di dark mode: hitam */
+            --on-accent-shadow: 0 1px 2px rgba(255,255,255,0.5), 0 0 14px rgba(255,255,255,0.35);
+        }
+
+        /* ---------- BASE THEME: LIGHT ---------- */
+        [data-base="light"] {
+            --bg-dark: #f2f2f5;
+            --baground-dark: #ffffff;
+            --surface-deep: #ffffff;
+            --text-light: #1a1a1a;
+            --btn-gray: #e4e4e8;
+            --border-line: #dcdcdc;
+            --bg-items: #ececf0;
+            --muted-gray: #777777;
+            --soft-gray: #999999;
+            --dim-gray: #aaaaaa;
+            --label-gray: #888888;
+            --light-gray: #555555;
+            --shadow-color: rgba(0,0,0,0.12);
+            --shadow-heavy: rgba(0,0,0,0.25);
+            --overlay-shine: rgba(255,255,255,0.6);
+            --overlay-faint: rgba(0,0,0,0.04);
+            --on-accent-color: #ffffff;   /* warna teks di atas permukaan --accent-primary saat light mode: putih */
+            --on-accent-shadow: 1px 1px 3px rgba(0,0,0,0.45), 0 0 10px rgba(0,0,0,0.25); /* shadow gelap biar putihnya nggak "nyatu" ke permukaan aksen yang terang */
+        }
+
+        /* ---------- CUSTOM THEME: NERU (aksen kuning khas Akita Neru, default) ---------- */
+        [data-accent="neru"] {
+            --accent-primary: #ffee00;
+            --accent-bright: #fff200;
+            --accent-secondary: #ffcc00;
+            --accent-shadow: #b3a700;
+            --accent-particle: #e0e0e0;
+            --accent-text-light: #8a6f00;  /* varian gelap accent-primary khusus buat teks di base-light, biar kebaca */
+        }
+
+        /* ---------- CUSTOM THEME: SEKAI (aksen pastel biru-lavender, diambil dari palet project Sekai kamu sebelumnya) ---------- */
+        [data-accent="sekai"] {
+            --accent-primary: #8EC5FC;    /* biru pastel cerah */
+            --accent-bright: #af57ff;     /* ungu vivid, buat highlight/teks penegas */
+            --accent-secondary: #E0C3FC;  /* lavender, titik tengah gradient */
+            --accent-shadow: #6a3fc7;     /* ungu gelap, buat shadow tombol & teks di base-light */
+            --accent-particle: #cfe8ff;   /* partikel biru pucat */
+            --accent-text-light: #6a3fc7;  /* dipakai buat teks aksen di base-light biar kebaca */
+        }
+
+        /* ---------- --accent-text: versi warna aksen yang otomatis nyesuain base-theme, KHUSUS buat teks (bukan background) ----------
+           dark → tetep pakai accent-primary yang emang udah kontras di background gelap
+           light → pakai varian accent-text-light yang lebih gelap/pekat, biar nggak "ilang" di background terang */
+        [data-base="dark"] { --accent-text: var(--accent-primary); }
+        [data-base="light"] { --accent-text: var(--accent-text-light); }
 
         html, body { 
             margin: 0; 
@@ -29,7 +124,7 @@
             width: 100%;
             height: 100%;
             overflow-x: hidden; 
-            overscroll-behavior-y: contain;
+            overscroll-behavior-y: auto;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
         }
@@ -52,7 +147,7 @@
         
         .header-container::before { 
             content: ''; position: absolute; top: 0; left: 0; width: 200%; height: 100%; 
-            background: linear-gradient(to right, #ffee00, #ffcc00, #ffee00); 
+            background: linear-gradient(to right, var(--accent-primary), var(--accent-secondary), var(--accent-primary)); 
             background-size: 200% 100%; animation: gradientMove 8s linear infinite; z-index: -1; 
         }
         
@@ -60,26 +155,28 @@
 
         .header-content { text-align: center; z-index: 2; }
         .header-content h1 { 
-            color: black; font-size: 1.8em; margin: 0; 
+            color: var(--on-accent-color); font-size: 1.8em; margin: 0; 
             letter-spacing: 2px; font-weight: 900;
+            text-shadow: var(--on-accent-shadow);
         }
 
         #displaySaldo {
-            display: inline-block; margin-top: 10px; color: black; font-weight: 900; 
-            font-size: 1.1em; background: rgba(255,255,255,0.3); 
+            display: inline-block; margin-top: 10px; color: var(--on-accent-color); font-weight: 900; 
+            font-size: 1.1em; background: var(--overlay-shine); 
             padding: 5px 15px; border-radius: 20px;
+            text-shadow: var(--on-accent-shadow);
         }
 
         .category-nav {
-            display: flex; background: var(--neru-black); position: sticky; top: 0; z-index: 100;
-            border-bottom: 2px solid #333;
+            display: flex; background: var(--surface-deep); position: sticky; top: 0; z-index: 100;
+            border-bottom: 2px solid var(--bg-items);
         }
         .nav-item {
             flex: 1; padding: 18px 10px; text-align: center; font-weight: 900; cursor: pointer;
-            transition: 0.3s; color: #666; font-size: 0.85em; letter-spacing: 1px;
-            text-transform: uppercase;
+            transition: 0.3s; color: var(--muted-gray); font-size: 0.85em; letter-spacing: 1px;
+            text-transform: uppercase; -webkit-tap-highlight-color: transparent;
         }
-        .nav-item.active { color: var(--primary-yellow); border-bottom: 4px solid var(--primary-yellow); }
+        .nav-item.active { color: var(--accent-text); border-bottom: 4px solid var(--accent-primary); }
 
         .view-slider {
             display: flex; width: 200%; transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -88,14 +185,14 @@
         .view-page { width: 50%; box-sizing: border-box; }
 
         .main-card {
-            background: var(--neru-black); margin: 20px 15px 30px 15px;
-            padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            position: relative; z-index: 10; border-top: 5px solid var(--primary-yellow);
+            background: var(--surface-deep); margin: 20px 15px 30px 15px;
+            padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px var(--shadow-color);
+            position: relative; z-index: 10; border-top: 5px solid var(--accent-primary);
         }
 
         .main-card-2 {
-            background: var(--neru-black); margin: 20px 15px 30px 15px;
-            padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            background: var(--surface-deep); margin: 20px 15px 30px 15px;
+            padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px var(--shadow-color);
             position: relative; z-index: 10;
         }
 
@@ -109,7 +206,7 @@
             flex: 1; padding: 14px; text-align: center; border-radius: 12px;
             cursor: pointer; font-family: 'Inter', sans-serif;
             font-weight: 900 !important; font-size: 0.85em; z-index: 2;
-            transition: color 0.3s ease; color: #aaa;
+            transition: color 0.3s ease; color: var(--soft-gray);
             -webkit-tap-highlight-color: transparent;
         }
 
@@ -125,39 +222,58 @@
         .active-out .selection-indicator { display: block; transform: translateX(100%); background: var(--out-color); }
 
         .input-group { margin-bottom: 18px; }
-        label { display: block; margin-bottom: 8px; color: var(--primary-yellow); font-size: 0.8em; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; }
+        label { display: block; margin-bottom: 8px; color: var(--accent-text); font-size: 0.8em; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; }
         
         input, textarea {
-            width: 100%; padding: 14px; border-radius: 12px; border: 2px solid #333;
-            background: #252525; color: white; box-sizing: border-box; font-size: 16px;
+            width: 100%; padding: 14px; border-radius: 12px; border: 2px solid var(--bg-items);
+            background: var(--baground-dark); color: var(--text-light); box-sizing: border-box; font-size: 16px;
             font-family: 'Inter', sans-serif; font-weight: 700;
         }
 
-        input:focus, textarea:focus { outline: none; border-color: var(--primary-yellow); }
+        input:focus, textarea:focus { outline: none; border-color: var(--accent-primary); }
 
         .submit-btn {
-            width: 100%; padding: 18px; background: var(--primary-yellow);
-            color: black; border: none; border-radius: 12px;
+            width: 100%; padding: 18px; background: var(--accent-primary);
+            color: var(--on-accent-color); border: none; border-radius: 12px;
             font-family: 'Inter', sans-serif;
             font-weight: 900 !important; font-size: 1.1em; cursor: pointer;
             text-transform: uppercase; letter-spacing: 2px;
             margin-top: 10px;
             transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            box-shadow: 0 4px 0 #b3a700;
+            box-shadow: 0 4px 0 var(--accent-shadow);
+            text-shadow: var(--on-accent-shadow);
             -webkit-appearance: none;
             appearance: none;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        .submit-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #b3a700; }
+        .submit-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 var(--accent-shadow); }
+
+        .submit-btn-2 {
+            width: 60%; display: block; margin: 18px auto 0 auto; padding: 10px; background: var(--accent-primary);
+            color: var(--on-accent-color); border: none; border-radius: 12px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 900 !important; font-size: 0.9em; cursor: pointer;
+            text-transform: uppercase; letter-spacing: 2px;
+            margin-top: 30px; margin-bottom: 10px;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 4px 0 var(--accent-shadow);
+            text-shadow: var(--on-accent-shadow);
+            -webkit-appearance: none;
+            appearance: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .submit-btn-2:active { transform: translateY(2px); box-shadow: 0 2px 0 var(--accent-shadow); }
 
         .history-item {
             display: flex; justify-content: space-between; align-items: center;
-            padding: 12px 15px; cursor: pointer; border-bottom: 1px solid #333; color: #ccc;
+            padding: 12px 15px; cursor: pointer; border-bottom: 1px solid var(--bg-items); color: var(--light-gray);
         }
-        .history-item:hover { background: #333; color: var(--primary-yellow); }
-        .delete-history { color: #e74c3c; padding: 5px 10px; font-weight: 900; font-size: 18px; }
+        .history-item:hover { background: var(--bg-items); color: var(--accent-text); }
+        .delete-history { color: var(--out-color); padding: 5px 10px; font-weight: 900; font-size: 18px; }
 
-        .empty-state { text-align: center; padding: 50px 20px; color: #555; }
+        .empty-state { text-align: center; padding: 50px 20px; color: var(--dim-gray); }
         .empty-state i { font-size: 4em; margin-bottom: 15px; }
 
         .triangle-container { 
@@ -175,29 +291,17 @@
             position: absolute; clip-path: polygon(50% 0%, 0% 100%, 100% 100%); 
             z-index: 9999; pointer-events: none; 
         }
-        
-        .table-container {
-            width: 97%;
-        
-            margin: 0 auto;
-        
-            overflow-x: auto;
-        
-            border-radius: 18px;
-        
-            -webkit-overflow-scrolling: touch;
-        }
 
         .tabel {
             width: 97%;
             margin: 20px 15px 30px 15px;
             padding: 25px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            box-shadow: 0 10px 30px var(--shadow-color);
             position: relative;
             z-index: 10;
             border-collapse: collapse;
             font-size: 0.75em;
-            color: white;
+            color: var(--text-light);
             min-width: 600px;
         }
 
@@ -213,7 +317,7 @@
         .pagination button {
             background: var(--btn-gray);
             border: none;
-            color: white;
+            color: var(--text-light);
 
             width: 40px;
             height: 40px;
@@ -223,17 +327,18 @@
             cursor: pointer;
 
             transition: 0.2s;
+            -webkit-tap-highlight-color: transparent;
         }
 
         .pagination button:hover {
-            background: var(--primary-yellow);
+            background: var(--accent-primary);
             color: black;
         }
 
         #pageInfo {
             font-size: 0.85em;
             font-weight: 700;
-            color: #aaa;
+            color: var(--soft-gray);
         }
         
         .toast {
@@ -242,8 +347,8 @@
             left: 50%;
             transform: translateX(-50%) translateY(20px);
             
-            background: var(--neru-black);
-            color: var(--primary-yellow);
+            background: var(--surface-deep);
+            color: var(--accent-text);
             
             padding: 14px 20px;
             border-radius: 12px;
@@ -253,8 +358,8 @@
             font-size: 0.85em;
             letter-spacing: 1px;
             
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            border: 1px solid #333;
+            box-shadow: 0 10px 30px var(--shadow-color);
+            border: 1px solid var(--bg-items);
             
             opacity: 0;
             transition: all 0.3s ease;
@@ -274,11 +379,11 @@
         }
 
         .summary-card {
-            background: #252525;
+            background: var(--baground-dark);
             border-radius: 14px;
             padding: 12px;
             text-align: center;
-            border: 1px solid #333;
+            border: 1px solid var(--bg-items);
         }
 
         .summary-title {
@@ -286,7 +391,7 @@
             font-weight: 900;
             letter-spacing: 1px;
             margin-bottom: 8px;
-            color: #888;
+            color: var(--label-gray);
         }
 
         .summary-value {
@@ -311,8 +416,143 @@
         }
 
         .summary-card.selisih.zero .summary-value {
-            color: #aaa;
+            color: var(--soft-gray);
         }
+
+        .custom-alert-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--shadow-heavy); z-index: 10000;
+            display: none; align-items: center; justify-content: center;
+            opacity: 0; transition: 0.3s ease;
+        }
+        .custom-alert-box {
+            background: var(--surface-deep); border: 2px solid var(--bg-items);
+            border-radius: 15px; padding: 25px; width: 80%; max-width: 320px;
+            text-align: center; box-shadow: 0 10px 40px var(--shadow-heavy);
+            transform: scale(0.8); transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .custom-alert-box h3 { color: var(--out-color); margin-top: 0; font-weight: 900; }
+        .custom-alert-box p { font-size: 0.9em; color: var(--light-gray); margin-bottom: 20px; }
+        .alert-btn-group { display: flex; justify-content: center; gap: 10px; }
+
+        .jenis-dropdown-panel {
+            display: none;
+            position: absolute;
+            top: 100%; left: 0;
+            background: var(--baground-dark);
+            border: 1px solid var(--border-line);
+            border-radius: 8px;
+            padding: 8px;
+            z-index: 200;
+            min-width: 140px;
+            max-height: 200px;
+            overflow-y: auto;
+            box-shadow: 0 6px 16px var(--shadow-color);
+            text-align: left;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .jenis-dropdown-panel.open { display: block; }
+        .jenis-dropdown-panel label {
+            display: flex; align-items: center; gap: 6px;
+            font-size: 11px; font-weight: 400; text-transform: none;
+            color: var(--text-light); padding: 4px 0; cursor: pointer;
+            text-align: left; justify-content: flex-start; width: 100%;
+        }
+
+        .jenis-dropdown-panel label input[type="checkbox"] {
+            flex-shrink: 0;
+            width: 10%;
+        }
+        .jenis-dropdown-panel label span {
+            flex: 1;
+            text-align: left;
+        }
+
+        .picker-field{ position:relative; }
+        .picker-trigger{
+            width:100%; background:var(--bg-items); color:var(--text-light);
+            font-size:9px; border:1px solid var(--dim-gray); padding:5px; border-radius:6px;
+            cursor:pointer; text-align:left; -webkit-tap-highlight-color: transparent;
+        }
+        .picker-trigger:hover{ border-color:var(--accent-primary); }
+        .picker-panel{
+            position:absolute; top:calc(100% + 4px); left:0;
+            background:var(--baground-dark); border:1px solid var(--border-line);
+            border-radius:12px; padding:14px; z-index:200; width:220px;
+            box-shadow:0 6px 16px var(--shadow-color);
+            opacity:0; pointer-events:none;
+            transform:translateY(-6px) scale(0.96); transform-origin:top left;
+            transition: opacity 0.18s ease, transform 0.18s cubic-bezier(0.34,1.2,0.64,1);
+            -webkit-tap-highlight-color: transparent;
+        }
+        .picker-panel.open{ opacity:1; pointer-events:auto; transform:translateY(0) scale(1); }
+
+        .picker-actions button.picker-clear{
+            color: var(--out-color);
+            margin-right: auto;
+            -webkit-tap-highlight-color: transparent; /* biar Hapus nempel kiri, Batal/OK tetep ngumpul kanan */
+        }
+        .picker-trigger.picker-trigger-lg{
+            font-size: 16px;
+            font-weight: 700;
+            padding: 14px;
+            border-radius: 12px;
+            border: 2px solid var(--bg-items);
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .cal-header{ display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; -webkit-tap-highlight-color: transparent; }
+        .cal-title{ font-weight:900; font-size:0.8em; color:var(--text-light); -webkit-tap-highlight-color: transparent; }
+        .cal-nav{ background:var(--btn-gray); border:none; color:var(--text-light); width:22px; height:22px; border-radius:50%; cursor:pointer; font-size:0.8em; transition:0.15s; -webkit-tap-highlight-color: transparent; }
+        .cal-nav:hover{ background:var(--accent-primary); color:black; transform:scale(1.1); -webkit-tap-highlight-color: transparent; }
+        .cal-grid{ display:grid; grid-template-columns:repeat(7,1fr); gap:2px; text-align:center; transition:opacity 0.12s ease; -webkit-tap-highlight-color: transparent; }
+        .cal-dow{ font-size:0.55em; color:var(--label-gray); font-weight:700; padding-bottom:4px; -webkit-tap-highlight-color: transparent; }
+        .cal-day{
+            aspect-ratio:1; display:flex; align-items:center; justify-content:center;
+            border-radius:50%; cursor:pointer; font-size:0.68em; color:var(--text-light);
+            transition: background 0.15s ease, color 0.15s ease; -webkit-tap-highlight-color: transparent;
+        }
+        .cal-day:hover{ background:var(--btn-gray); }
+        .cal-day.today{ color:var(--accent-text); font-weight:900; -webkit-tap-highlight-color: transparent; }
+        .cal-day.selected{ background:var(--accent-primary); color:black; font-weight:900; animation: dayPop 0.25s ease; -webkit-tap-highlight-color: transparent; }
+        .cal-day.empty{ visibility:hidden; cursor:default; -webkit-tap-highlight-color: transparent; }
+        @keyframes dayPop{ 0%{transform:scale(0.6);} 65%{transform:scale(1.15);} 100%{transform:scale(1);} }
+
+        .time-display{ display:flex; justify-content:center; align-items:center; gap:2px; margin-bottom:14px; -webkit-tap-highlight-color: transparent; }
+        .time-num{ font-size:1.5em; font-weight:900; color:var(--dim-gray); cursor:pointer; padding:2px 6px; border-radius:6px; transition: background 0.15s ease, color 0.15s ease; -webkit-tap-highlight-color: transparent; }
+        .time-num.active{ color:var(--accent-text); background:var(--surface-deep); -webkit-tap-highlight-color: transparent; }
+        .time-colon{ font-size:1.5em; font-weight:900; color:var(--dim-gray); -webkit-tap-highlight-color: transparent; }
+
+        .clock-face{ position:relative; width:190px; height:190px; border-radius:50%; background:var(--surface-deep); margin:0 auto; user-select:none; touch-action:none; -webkit-tap-highlight-color: transparent; }
+        .clock-center{ position:absolute; top:50%; left:50%; width:6px; height:6px; background:var(--accent-primary); border-radius:50%; transform:translate(-50%,-50%); z-index:5; -webkit-tap-highlight-color: transparent; }
+        .clock-hand{
+            position:absolute; bottom:50%; left:50%; width:2px; background:var(--accent-primary);
+            transform-origin:bottom center; z-index:3; pointer-events:none;
+            transition: height 0.2s cubic-bezier(0.34,1.2,0.64,1), transform 0.2s cubic-bezier(0.34,1.2,0.64,1);
+            -webkit-tap-highlight-color: transparent;
+        }
+        .clock-hand-end{ position:absolute; width:28px; height:28px; background:var(--accent-primary); border-radius:50%; top:-14px; left:50%; transform:translateX(-50%); -webkit-tap-highlight-color: transparent; }
+        .clock-num{
+            position:absolute; display:flex; align-items:center; justify-content:center;
+            font-weight:700; color:var(--text-light); border-radius:50%; cursor:pointer;
+            transform:translate(-50%,-50%); z-index:4;
+            animation: numPop 0.18s ease;
+            transition: background 0.15s ease, color 0.15s ease;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .clock-num.outer{ width:26px; height:26px; font-size:0.68em; -webkit-tap-highlight-color: transparent; }
+        .clock-num.inner{ width:22px; height:22px; font-size:0.52em; color:var(--label-gray); -webkit-tap-highlight-color: transparent; }
+        .clock-num.selected{ color:black; font-weight:900; background:var(--accent-primary); -webkit-tap-highlight-color: transparent; }
+        @keyframes numPop{ from{opacity:0; transform:translate(-50%,-50%) scale(0.4);} to{opacity:1; transform:translate(-50%,-50%) scale(1);} }
+
+        .picker-actions{ display:flex; justify-content:flex-end; gap:2px; margin-top:12px; -webkit-tap-highlight-color: transparent; }
+        .picker-actions button{ background:none; border:none; color:var(--accent-text); font-weight:900; font-size:0.65em; text-transform:uppercase; letter-spacing:0.5px; padding:6px 10px; border-radius:6px; cursor:pointer; transition:background 0.15s ease; -webkit-tap-highlight-color: transparent; }
+        .picker-actions button:hover{ background:var(--btn-gray); }
+
+        /* buat select all / unselect all di filter Jenis */
+        .jenis-bulk-actions{ display:flex; gap:6px; margin-bottom:8px; padding-bottom:8px; border-bottom:1px solid var(--border-line); -webkit-tap-highlight-color: transparent; }
+        .jenis-bulk-actions button{ flex:1; background:var(--btn-gray); border:none; color:var(--accent-text); font-size:10px; font-weight:900; padding:5px; border-radius:6px; cursor:pointer; -webkit-tap-highlight-color: transparent; }
+        .jenis-bulk-actions button:hover{ background:var(--accent-primary); color:black; -webkit-tap-highlight-color: transparent; }
 
         @media screen and (max-width: 480px) {
             th, td {
@@ -336,10 +576,111 @@
             .summary-box {
                 grid-template-columns: 1fr;
             }
+
+            .picker-field[data-field="jam"] .picker-panel,
+            .picker-field[data-field="chartEnd"] .picker-panel{
+                left: auto;
+                right: 0;
+                transform-origin: top right;
+            }
+        }
+
+        /* ---------- floating theme menu ---------- */
+        .theme-menu-btn {
+            position: fixed;
+            top: 16px;
+            left: 16px;
+            z-index: 300;
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--surface-deep);
+            border: 1px solid var(--border-line);
+            box-shadow: 0 4px 12px var(--shadow-color);
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+            transition: 0.2s;
+        }
+        .theme-menu-btn:active { transform: scale(0.92); }
+        .theme-menu-btn i { color: var(--text-light); font-size: 1.05em; }
+
+        .theme-menu-popup {
+            position: fixed;
+            top: 66px;
+            left: 16px;
+            z-index: 300;
+            min-width: 200px;
+            background: var(--surface-deep);
+            border: 1px solid var(--border-line);
+            border-radius: 16px;
+            box-shadow: 0 10px 30px var(--shadow-heavy);
+            padding: 14px;
+            opacity: 0;
+            transform: translateY(-8px) scale(0.96);
+            pointer-events: none;
+            transition: 0.18s ease;
+        }
+        .theme-menu-popup.open {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            pointer-events: auto;
+        }
+
+        .theme-menu-section + .theme-menu-section { margin-top: 14px; }
+        .theme-menu-label {
+            display: block;
+            font-size: 0.7em;
+            font-weight: 900;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--label-gray);
+            margin-bottom: 8px;
+        }
+        .theme-menu-options { display: flex; gap: 8px; }
+        .theme-opt-btn {
+            flex: 1;
+            padding: 8px 6px;
+            border-radius: 10px;
+            border: 1px solid var(--border-line);
+            background: var(--btn-gray);
+            color: var(--text-light);
+            font-weight: 700;
+            font-size: 0.85em;
+            cursor: pointer;
+            transition: 0.2s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .theme-opt-btn.active {
+            background: var(--accent-primary);
+            border-color: var(--accent-primary);
+            color: black;
         }
     </style>
 </head>
 <body>
+
+<div class="theme-menu-btn" id="themeMenuBtn" onclick="toggleThemeMenu(event)">
+    <i class="fa-solid fa-bars"></i>
+</div>
+<div class="theme-menu-popup" id="themeMenuPopup">
+    <div class="theme-menu-section">
+        <span class="theme-menu-label">Base Theme</span>
+        <div class="theme-menu-options">
+            <button class="theme-opt-btn" data-base-opt="dark" onclick="applyBaseTheme('dark')">Dark</button>
+            <button class="theme-opt-btn" data-base-opt="light" onclick="applyBaseTheme('light')">Light</button>
+        </div>
+    </div>
+    <div class="theme-menu-section">
+        <span class="theme-menu-label">Custom Theme</span>
+        <div class="theme-menu-options">
+            <button class="theme-opt-btn" data-accent-opt="neru" onclick="applyAccentTheme('neru')">Neru</button>
+            <button class="theme-opt-btn" data-accent-opt="sekai" onclick="applyAccentTheme('sekai')">Sekai</button>
+        </div>
+    </div>
+</div>
 
 <header class="header-container" id="header">
     <div class="header-content">
@@ -366,18 +707,49 @@
             <div style="display: flex; gap: 12px;">
                 <div class="input-group" style="flex: 1;">
                     <label>Tanggal</label>
-                    <input type="date" id="tgl">
+                    <div class="picker-field" data-field="tgl" data-type="date" data-placeholder="dd/mm/yyyy">
+                        <button type="button" class="picker-trigger picker-trigger-lg" onclick="togglePicker(this, event)"><span class="picker-label">dd/mm/yyyy</span></button>
+                        <div class="picker-panel">
+                            <div class="cal-header">
+                                <button type="button" class="cal-nav" onclick="changeMonth(this, -1)">‹</button>
+                                <div class="cal-title"></div>
+                                <button type="button" class="cal-nav" onclick="changeMonth(this, 1)">›</button>
+                            </div>
+                            <div class="cal-grid"></div>
+                            <div class="picker-actions">
+                                <button type="button" class="picker-clear" onclick="clearPicker(this)">Hapus</button>
+                                <button type="button" onclick="cancelPicker(this)">Batal</button>
+                                <button type="button" onclick="confirmDatePicker(this)">OK</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div class="input-group" style="flex: 1;">
                     <label>Waktu</label>
-                    <input type="time" id="jam">
+                    <div class="picker-field" data-field="jam" data-type="time" data-placeholder="--:--">
+                        <button type="button" class="picker-trigger picker-trigger-lg" onclick="togglePicker(this, event)"><span class="picker-label">--:--</span></button>
+                        <div class="picker-panel">
+                            <div class="time-display">
+                                <span class="time-num hour-num" onclick="setTimeMode(this,'hour')"></span><span class="time-colon">:</span><span class="time-num min-num" onclick="setTimeMode(this,'minute')"></span>
+                            </div>
+                            <div class="clock-face" onclick="clockClick(this, event)">
+                                <div class="clock-center"></div>
+                                <div class="clock-hand"><div class="clock-hand-end"></div></div>
+                            </div>
+                            <div class="picker-actions">
+                                <button type="button" class="picker-clear" onclick="clearPicker(this)">Hapus</button>
+                                <button type="button" onclick="cancelPicker(this)">Batal</button>
+                                <button type="button" onclick="confirmTimePicker(this)">OK</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
             <div class="input-group" style="position: relative;">
                 <label>Jenis Laporan</label>
                 <input type="text" id="jenis" placeholder="Ketik jenis..." autocomplete="off" onfocus="showHistory()" oninput="filterHistory()">
-                <div id="custom-history-dropdown" style="display: none; position: absolute; width: 100%; background: #252525; border: 1px solid #444; border-radius: 10px; z-index: 100; max-height: 200px; overflow-y: auto; margin-top: 5px;"></div>
+                <div id="custom-history-dropdown" style="display: none; position: absolute; width: 100%; background: var(--baground-dark); border: 1px solid var(--border-line); border-radius: 10px; z-index: 100; max-height: 200px; overflow-y: auto; margin-top: 5px; -webkit-tap-highlight-color: transparent;"></div>
             </div>
 
             <div class="input-group">
@@ -405,14 +777,44 @@
                     <button class="p-btn" onclick="updateChartPeriod('CUSTOM', this)">CUSTOM</button>
                 </div>
 
-                <div id="customPeriodBox" style="display: none; gap: 10px; margin-top: 10px; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 10px; margin-bottom: 10px;">
+                <div id="customPeriodBox" style="display: none; gap: 10px; margin-top: 10px; background: var(--overlay-faint); padding: 10px; border-radius: 10px; margin-bottom: 10px;">
                     <div style="flex: 1;">
-                        <label style="font-size: 9px; color: #888;">DARI:</label>
-                        <input type="date" id="chartStart" onchange="updateChartPeriod('CUSTOM')" style="font-size: 11px; padding: 5px;">
+                        <label style="font-size: 9px; color: var(--label-gray);">DARI:</label>
+                        <div class="picker-field" data-field="chartStart" data-type="date" data-onconfirm="updateChartPeriodCustom" data-placeholder="dd/mm/yyyy">
+                            <button type="button" class="picker-trigger" onclick="togglePicker(this, event)"><span class="picker-label">dd/mm/yyyy</span></button>
+                            <div class="picker-panel">
+                                <div class="cal-header">
+                                    <button type="button" class="cal-nav" onclick="changeMonth(this, -1)">‹</button>
+                                    <div class="cal-title"></div>
+                                    <button type="button" class="cal-nav" onclick="changeMonth(this, 1)">›</button>
+                                </div>
+                                <div class="cal-grid"></div>
+                                <div class="picker-actions">
+                                    <button type="button" class="picker-clear" onclick="clearPicker(this)">Hapus</button>
+                                    <button type="button" onclick="cancelPicker(this)">Batal</button>
+                                    <button type="button" onclick="confirmDatePicker(this)">OK</button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div style="flex: 1;">
-                        <label style="font-size: 9px; color: #888;">SAMPAI:</label>
-                        <input type="date" id="chartEnd" onchange="updateChartPeriod('CUSTOM')" style="font-size: 11px; padding: 5px;">
+                        <label style="font-size: 9px; color: var(--label-gray);">SAMPAI:</label>
+                        <div class="picker-field" data-field="chartEnd" data-type="date" data-onconfirm="updateChartPeriodCustom" data-placeholder="dd/mm/yyyy">
+                            <button type="button" class="picker-trigger" onclick="togglePicker(this, event)"><span class="picker-label">dd/mm/yyyy</span></button>
+                            <div class="picker-panel">
+                                <div class="cal-header">
+                                    <button type="button" class="cal-nav" onclick="changeMonth(this, -1)">‹</button>
+                                    <div class="cal-title"></div>
+                                    <button type="button" class="cal-nav" onclick="changeMonth(this, 1)">›</button>
+                                </div>
+                                <div class="cal-grid"></div>
+                                <div class="picker-actions">
+                                    <button type="button" class="picker-clear" onclick="clearPicker(this)">Hapus</button>
+                                    <button type="button" onclick="cancelPicker(this)">Batal</button>
+                                    <button type="button" onclick="confirmDatePicker(this)">OK</button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 
@@ -438,41 +840,110 @@
                     </div>
 
                 </div>
+
+                <button class="submit-btn-2" id="btnLaporan" onclick="mintaLaporan()">MINTA LAPORAN</button>
+
             </div>
         </div>
 
         <style>
             .p-btn {
-                background: var(--btn-gray); border: none; color: white;
+                background: var(--btn-gray); border: none; color: var(--text-light);
                 padding: 5px 12px; border-radius: 8px; font-size: 11px;
                 font-weight: 900; cursor: pointer; transition: 0.3s;
+                -webkit-tap-highlight-color: transparent;
             }
-            .p-btn.active { background: var(--primary-yellow); color: black; }
+            .p-btn.active { background: var(--accent-primary); color: black; }
         </style>
 
-            <div class="table-container">
             <table class="tabel">
                 <thead>
-                    <tr style="background: var(--btn-gray); color: var(--primary-yellow);">
-                        <th style="padding: 8px; border: 1px solid #444;"><button onclick="toggleFilter('date')" style="background:none; border:none; color:inherit; font-weight:900; font-size:1em;">TGL</button></th>
-                        <th style="padding: 8px; border: 1px solid #444;"><button onclick="toggleFilter('time')" style="background:none; border:none; color:inherit; font-weight:900; font-size:1em;">JAM</button></th>
-                        <th style="padding: 8px; border: 1px solid #444;"><button onclick="toggleFilter('jenis')" style="background:none; border:none; color:inherit; font-weight:900; font-size:1em;">JENIS</button></th>
-                        <th style="padding: 8px; border: 1px solid #444;"><button onclick="toggleFilter('keterangan')" style="background:none; border:none; color:inherit; font-weight:900; font-size:1em;">KET</th>
-                        <th style="padding: 8px; border: 1px solid #444;">MASUK</th>
-                        <th style="padding: 8px; border: 1px solid #444;">KELUAR</th>
-                        <th style="padding: 8px; border: 1px solid #444;"><button onclick="toggleFilter('saldo')" style="background:none; border:none; color:inherit; font-weight:900; font-size:1em;">SALDO</button></th>
+                    <tr style="background: var(--btn-gray); color: var(--accent-text);">
+                        <th style="padding: 8px; border: 1px solid var(--border-line);"><button onclick="toggleFilter('date')" style="background:none; border:none; color:inherit; font-weight:900; font-size:1em;">TGL</button></th>
+                        <th style="padding: 8px; border: 1px solid var(--border-line);"><button onclick="toggleFilter('time')" style="background:none; border:none; color:inherit; font-weight:900; font-size:1em;">JAM</button></th>
+                        <th style="padding: 8px; border: 1px solid var(--border-line);"><button onclick="toggleFilter('jenis')" style="background:none; border:none; color:inherit; font-weight:900; font-size:1em;">JENIS</button></th>
+                        <th style="padding: 8px; border: 1px solid var(--border-line);"><button onclick="toggleFilter('keterangan')" style="background:none; border:none; color:inherit; font-weight:900; font-size:1em;">KET</th>
+                        <th style="padding: 8px; border: 1px solid var(--border-line);">MASUK</th>
+                        <th style="padding: 8px; border: 1px solid var(--border-line);">KELUAR</th>
+                        <th style="padding: 8px; border: 1px solid var(--border-line);"><button onclick="toggleFilter('saldo')" style="background:none; border:none; color:inherit; font-weight:900; font-size:1em;">SALDO</button></th>
                     </tr>
-                    <tr id="filterRow" style="display: none; background: #252525;">
+                    <tr id="filterRow" style="display: none; background: var(--baground-dark);">
                         <th style="padding: 5px;">
-                            <input type="date" id="fDateMin" oninput="applyCanggih()" style="font-size:9px; width:100%; margin-bottom:2px;" placeholder="Dari">
-                            <input type="date" id="fDateMax" oninput="applyCanggih()" style="font-size:9px; width:100%;" placeholder="Sampai">
+                            <div class="picker-field" data-field="fDateMin" data-type="date" data-onconfirm="applyCanggih" 	data-placeholder="Dari" style="margin-bottom:2px;">
+                                <button type="button" class="picker-trigger" onclick="togglePicker(this, event)"><span class="picker-label">Dari</span></button>
+                                <div class="picker-panel">
+                                    <div class="cal-header">
+                                        <button type="button" class="cal-nav" onclick="changeMonth(this, -1)">‹</button>
+                                        <div class="cal-title"></div>
+                                        <button type="button" class="cal-nav" onclick="changeMonth(this, 1)">›</button>
+                                    </div>
+                                    <div class="cal-grid"></div>
+                                    <div class="picker-actions">
+                                        <button type="button" class="picker-clear" onclick="clearPicker(this)">Hapus</button>
+                                        <button type="button" onclick="cancelPicker(this)">Batal</button>
+                                        <button type="button" onclick="confirmDatePicker(this)">OK</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="picker-field" data-field="fDateMax" data-type="date" data-onconfirm="applyCanggih" data-placeholder="Sampai">
+                                <button type="button" class="picker-trigger" onclick="togglePicker(this, event)"><span class="picker-label">Sampai</span></button>
+                                <div class="picker-panel">
+                                    <div class="cal-header">
+                                        <button type="button" class="cal-nav" onclick="changeMonth(this, -1)">‹</button>
+                                        <div class="cal-title"></div>
+                                        <button type="button" class="cal-nav" onclick="changeMonth(this, 1)">›</button>
+                                    </div>
+                                    <div class="cal-grid"></div>
+                                    <div class="picker-actions">
+                                        <button type="button" class="picker-clear" onclick="clearPicker(this)">Hapus</button>
+                                        <button type="button" onclick="cancelPicker(this)">Batal</button>
+                                        <button type="button" onclick="confirmDatePicker(this)">OK</button>
+                                    </div>
+                                </div>
+                            </div>
                         </th>
                         <th style="padding: 5px;">
-                            <input type="time" id="fTimeMin" oninput="applyCanggih()" style="font-size:9px; width:100%; margin-bottom:2px;">
-                            <input type="time" id="fTimeMax" oninput="applyCanggih()" style="font-size:9px; width:100%;">
+                            <div class="picker-field" data-field="fTimeMin" data-type="time" data-onconfirm="applyCanggih" data-placeholder="--:--" style="margin-bottom:2px;">
+                                <button type="button" class="picker-trigger" onclick="togglePicker(this, event)"><span class="picker-label">--:--</span></button>
+                                <div class="picker-panel">
+                                    <div class="time-display">
+                                        <span class="time-num hour-num" onclick="setTimeMode(this,'hour')"></span><span class="time-colon">:</span><span class="time-num min-num" onclick="setTimeMode(this,'minute')"></span>
+                                    </div>
+                                    <div class="clock-face" onclick="clockClick(this, event)">
+                                        <div class="clock-center"></div>
+                                        <div class="clock-hand"><div class="clock-hand-end"></div></div>
+                                    </div>
+                                    <div class="picker-actions">
+                                        <button type="button" class="picker-clear" onclick="clearPicker(this)">Hapus</button>
+                                        <button type="button" onclick="cancelPicker(this)">Batal</button>
+                                        <button type="button" onclick="confirmTimePicker(this)">OK</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="picker-field" data-field="fTimeMax" data-type="time" data-onconfirm="applyCanggih" data-placeholder="--:--">
+                                <button type="button" class="picker-trigger" onclick="togglePicker(this, event)"><span class="picker-label">--:--</span></button>
+                                <div class="picker-panel">
+                                    <div class="time-display">
+                                        <span class="time-num hour-num" onclick="setTimeMode(this,'hour')"></span><span class="time-colon">:</span><span class="time-num min-num" onclick="setTimeMode(this,'minute')"></span>
+                                    </div>
+                                    <div class="clock-face" onclick="clockClick(this, event)">
+                                        <div class="clock-center"></div>
+                                        <div class="clock-hand"><div class="clock-hand-end"></div></div>
+                                    </div>
+                                    <div class="picker-actions">
+                                        <button type="button" class="picker-clear" onclick="clearPicker(this)">Hapus</button>
+                                        <button type="button" onclick="cancelPicker(this)">Batal</button>
+                                        <button type="button" onclick="confirmTimePicker(this)">OK</button>
+                                    </div>
+                                </div>
+                            </div>
                         </th>
-                        <th style="padding: 5px;">
-                            <select id="fJenis" onchange="applyCanggih()" style="width:100%; background:#333; color:white; font-size:10px;"></select>
+                        <th style="padding: 5px; position: relative;">
+                            <button type="button" onclick="toggleJenisDropdown()" 
+                                    style="width:100%; background:var(--bg-items); color:var(--text-light); font-size:10px; border:1px solid var(--dim-gray); padding:6px; border-radius:6px;">
+                                Jenis ▾
+                            </button>
+                            <div id="jenisDropdownPanel" class="jenis-dropdown-panel"></div>
                         </th>
                         <th style="padding: 5px;">
                             <input type="text" id="fKet" oninput="applyCanggih()" placeholder="..." style="font-size:10px; padding:4px;">
@@ -487,7 +958,12 @@
                 </thead>
                 <tbody id="tableBody"></tbody>
             </table>
+
+            <div style="display: flex; justify-content: flex-start; gap: 10px; margin: 15px 15px;">
+                <button class="p-btn" id="btnSelectMode" onclick="toggleSelectMode()" style="background: var(--btn-gray);">PILIH DATA</button>
+                <button class="p-btn" id="btnDeleteSelected" onclick="showCustomAlert()" style="display: none; background: var(--out-color);">HAPUS DATA (0)</button>
             </div>
+
             <div class="pagination">
 
                 <button onclick="changePage(-1)">
@@ -506,20 +982,90 @@
         </div>
     </div>
 
+    <div class="custom-alert-overlay" id="customAlertOverlay">
+        <div class="custom-alert-box" id="customAlertBox">
+            <h3>HAPUS DATA?</h3>
+            <p id="alertMessage">Yakin ingin menghapus data yang dipilih? Data akan dihapus permanen dari spreadsheet.</p>
+            <div class="alert-btn-group">
+                <button class="p-btn" style="background: var(--btn-gray); font-size:1em; padding: 10px 20px; -webkit-tap-highlight-color: transparent;" onclick="closeCustomAlert()">BATAL</button>
+                <button class="p-btn" id="btnConfirmDelete" style="background: var(--out-color); font-size:1em; padding: 10px 20px; -webkit-tap-highlight-color: transparent;" onclick="executeDelete()">HAPUS</button>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <script>
     let selectedType = '';
     let currentPage = 0;
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxuFf704Wmajc6ZaZ0JRJt2YmVL989cmP_3Dk4rbeBx9JfZ0nloPV8dfDGO9gu0rTub/exec"; 
-    const colorPalette = ["#ffee00", "#ffffff", "#ffcc00", "#e0e0e0"];
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx8XCSBIycTDkIFC8H74dovwr8vGnjm6MM38CnCNUFrW1TtVarkX3sQupP1h9mKhsWqrQ/exec"; 
+
+    // ambil warna dari CSS var() buat dipakai di JS (canvas/chart nggak bisa baca var() langsung)
+    function cssVar(name) {
+        return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    }
+    function hexToRgba(hex, alpha) {
+        hex = hex.replace('#', '');
+        if (hex.length === 3) hex = hex.split('').map(c => c + c).join('');
+        const r = parseInt(hex.substring(0, 2), 16);
+        const g = parseInt(hex.substring(2, 4), 16);
+        const b = parseInt(hex.substring(4, 6), 16);
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+
+    function getColorPalette() {
+        // fungsi (bukan konstanta) biar tiap partikel baru selalu ikut warna tema yang lagi aktif,
+        // termasuk kalau tema baru aja diganti tanpa reload halaman.
+        // CATATAN: sengaja nggak pake --text-light di sini, soalnya itu base-dependent (putih di dark,
+        // item di light) — partikel jadi ikut ke-switch pas ganti base-theme, padahal harusnya partikel
+        // cuma nyerminin identitas ACCENT (Neru/Sekai), bukan base gelap/terang.
+        return [cssVar('--accent-primary'), cssVar('--accent-bright'), cssVar('--accent-secondary'), cssVar('--accent-particle')];
+    }
+
+    // ---------- ganti tema (base: 'dark'/'light', accent: 'neru'/'sekai') ----------
+    function setTheme(base, accent) {
+        document.documentElement.setAttribute('data-base', base);
+        document.documentElement.setAttribute('data-accent', accent);
+        localStorage.setItem('neura-theme-base', base);
+        localStorage.setItem('neura-theme-accent', accent);
+        // getComputedStyle di refreshChartTheme() maksa browser recalc style dulu,
+        // jadi warna baru langsung kebaca, nggak perlu delay/timeout segala.
+        refreshChartTheme();
+        refreshHeaderParticles(); // partikel ambient header dibuat sekali pas load & warnanya dipatok inline,
+                                   // jadi kalau nggak di-refresh manual di sini dia bakal "nyangkut" ke warna tema lama
+        updateThemeMenuActiveState();
+    }
+
+    // ---------- floating theme menu ----------
+    function toggleThemeMenu(e) {
+        e.stopPropagation();
+        document.getElementById('themeMenuPopup').classList.toggle('open');
+    }
+    function applyBaseTheme(base) {
+        const accent = document.documentElement.getAttribute('data-accent');
+        setTheme(base, accent);
+    }
+    function applyAccentTheme(accent) {
+        const base = document.documentElement.getAttribute('data-base');
+        setTheme(base, accent);
+    }
+    function updateThemeMenuActiveState() {
+        const base = document.documentElement.getAttribute('data-base');
+        const accent = document.documentElement.getAttribute('data-accent');
+        document.querySelectorAll('[data-base-opt]').forEach(b => b.classList.toggle('active', b.dataset.baseOpt === base));
+        document.querySelectorAll('[data-accent-opt]').forEach(b => b.classList.toggle('active', b.dataset.accentOpt === accent));
+    }
+    document.getElementById('themeMenuPopup').addEventListener('click', e => e.stopPropagation());
+    document.addEventListener('click', () => document.getElementById('themeMenuPopup').classList.remove('open'));
+    updateThemeMenuActiveState(); // set active state awal sesuai tema yang lagi kepake
+
     const header = document.getElementById('header');
+
+    let isSelectMode = false;
+    let selectedRows = [];
 
     let touchstartX = 0;
     let touchendX = 0;
-    
-    document.addEventListener('touchstart', e => { touchstartX = e.changedTouches[0].screenX; });
-    document.addEventListener('touchend', e => { touchendX = e.changedTouches[0].screenX; handleGesture(); });
 
     function switchPage(index) {
         currentPage = index;
@@ -600,8 +1146,18 @@
 
     window.onload = () => {
         const now = new Date();
-        document.getElementById('tgl').value = now.toISOString().split('T')[0];
-        document.getElementById('jam').value = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+
+        ensurePickerData('tgl', 'date');
+        pickerData['tgl'].confirmedDate = now;
+        document.querySelector('.picker-field[data-field="tgl"] .picker-label').innerText =
+            `${String(now.getDate()).padStart(2,'0')}/${String(now.getMonth()+1).padStart(2,'0')}/${now.getFullYear()}`;
+
+        ensurePickerData('jam', 'time');
+        pickerData['jam'].confirmedHour = now.getHours();
+        pickerData['jam'].confirmedMinute = now.getMinutes();
+        document.querySelector('.picker-field[data-field="jam"] .picker-label').innerText =
+            `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+
         for (let i = 0; i < 20; i++) createRandomTriangle();
         updateSaldoHeader();
     };
@@ -630,9 +1186,11 @@
     async function kirimData() {
         const nominalStr = document.getElementById('nominal').value.replace(/\./g, "");
         const jenis = document.getElementById('jenis').value;
+        const tanggalVal = getPickerDateValue('tgl');
+        const waktuVal = getPickerTimeValue('jam');
 
-        if(!selectedType || !nominalStr || !jenis) {
-            showToast("Harap lengkapi data!");
+        if(!selectedType || !nominalStr || !jenis || !tanggalVal || !waktuVal) {
+            showToast("Harap Lengkapi Data!");
             return;
         }
 
@@ -642,14 +1200,21 @@
         btn.disabled = true;
 
         const formData = new URLSearchParams();
-        formData.append('tanggal', document.getElementById('tgl').value);
-        formData.append('waktu', document.getElementById('jam').value);
+        formData.append('tanggal', tanggalVal);
+        formData.append('waktu', waktuVal);
         formData.append('jenis', jenis);
         formData.append('keterangan', document.getElementById('keterangan').value);
         formData.append('nominal', nominalStr);
         formData.append('tipe', selectedType);
 
-        showToast("Ini cuma preview, tidak bisa kirim data");
+        fetch(WEB_APP_URL, {
+            method: "POST",
+            mode: "no-cors", 
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: formData.toString()
+        });
+
+        showToast("Data Terkirim!");
         let history = JSON.parse(localStorage.getItem('jenisHistory') || "[]");
         if (jenis && !history.includes(jenis)) {
             history.push(jenis);
@@ -664,6 +1229,38 @@
         }, 3000); 
     }
 
+    async function mintaLaporan() {
+        const btn = document.getElementById('btnLaporan');
+        if (!btn) return;
+
+        const originalText = btn.innerText;
+        btn.innerText = "MENGANALISIS...";
+        btn.disabled = true;
+
+        try {
+            const url = new URL(WEB_APP_URL);
+            url.searchParams.append("action", "minta_laporan");
+
+            await fetch(url.toString());
+
+            if (typeof showToast === "function") {
+            showToast("Laporan sedang dikirim ke email kamu!");
+            } else {
+            alert("Laporan sedang dikirim ke email kamu!");
+            }
+        } catch (err) {
+            if (typeof showToast === "function") {
+            showToast("Gagal meminta laporan.");
+            } else {
+            alert("Gagal meminta laporan.");
+            }
+        } finally {
+            btn.innerText = originalText;
+            btn.disabled = false;
+        }
+    }
+
+    const headerTriangles = []; // nyimpen elemen partikel header + index warna palet-nya, biar bisa di-refresh pas ganti tema
     function createRandomTriangle() {
         const triangle = document.createElement('div');
         triangle.classList.add('triangle-container');
@@ -671,9 +1268,22 @@
         triangle.style.width = `${size}px`; triangle.style.height = `${size}px`;
         triangle.style.left = `${Math.random() * header.offsetWidth}px`;
         triangle.style.top = `${Math.random() * header.offsetHeight}px`;
-        triangle.style.background = colorPalette[Math.floor(Math.random() * colorPalette.length)];
+        const palette = getColorPalette();
+        const colorIndex = Math.floor(Math.random() * palette.length);
+        triangle.style.background = palette[colorIndex];
         triangle.style.animation = `triangleMove ${Math.random() * 10 + 5}s ease-in-out infinite`;
         header.appendChild(triangle);
+        headerTriangles.push({ el: triangle, colorIndex });
+    }
+
+    function refreshHeaderParticles() {
+        // partikel dibuat sekali pas load, warnanya ke-inline langsung (bukan var()), jadi nggak otomatis ikut tema.
+        // di sini kita hitung ulang palet warna yang lagi aktif & pasang ulang ke tiap partikel, index warnanya dipertahanin
+        // biar polanya nggak berubah-ubah acak tiap ganti tema.
+        const palette = getColorPalette();
+        headerTriangles.forEach(({ el, colorIndex }) => {
+            el.style.background = palette[colorIndex];
+        });
     }
 
     document.addEventListener('click', (e) => {
@@ -682,7 +1292,8 @@
             p.classList.add('click-particle');
             const size = Math.random() * 15 + 5;
             p.style.width = `${size}px`; p.style.height = `${size}px`;
-            p.style.background = colorPalette[Math.floor(Math.random() * colorPalette.length)];
+            const palette = getColorPalette();
+            p.style.background = palette[Math.floor(Math.random() * palette.length)];
             p.style.left = `${e.pageX}px`; p.style.top = `${e.pageY}px`;
             document.body.appendChild(p);
             p.animate([{ transform: `translate(0, 0) scale(1) rotate(0deg)`, opacity: 1 }, { transform: `translate(${Math.random() * 100 - 50}px, ${Math.random() * 100 - 50}px) scale(0) rotate(360deg)`, opacity: 0 }], { duration: 500 });
@@ -691,14 +1302,16 @@
     });
 
     let myChart;
+    let lastChartData = null; // data chart terakhir yang dirender, dipakai buat re-render pas ganti tema
 
     function initChart(data) {
+        lastChartData = data;
         const ctx = document.getElementById('financeChart').getContext('2d');
         
         // Gradient untuk area bawah garis ala saham
         const gradient = ctx.createLinearGradient(0, 0, 0, 400);
-        gradient.addColorStop(0, 'rgba(255, 238, 0, 0.3)');
-        gradient.addColorStop(1, 'rgba(255, 238, 0, 0)');
+        gradient.addColorStop(0, hexToRgba(cssVar('--accent-primary'), 0.3));
+        gradient.addColorStop(1, hexToRgba(cssVar('--accent-primary'), 0));
 
         if (myChart) myChart.destroy();
 
@@ -709,25 +1322,53 @@
                 datasets: [{
                     label: 'Saldo',
                     data: data.map(r => r.saldo),
-                    borderColor: '#ffee00',
+                    borderColor: cssVar('--accent-primary'),
                     borderWidth: 3,
                     fill: true,
                     backgroundColor: gradient,
                     tension: 0.4, // Membuat garis melengkung (smooth)
                     pointRadius: 2,
-                    pointBackgroundColor: '#ffee00'
+                    pointBackgroundColor: cssVar('--accent-primary')
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
+                },
+
                 plugins: { legend: { display: false } },
                 scales: {
-                    x: { grid: { display: false }, ticks: { color: '#666', font: { size: 10 } } },
-                    y: { grid: { color: '#333' }, ticks: { color: '#666', font: { size: 10 } } }
+                    x: { grid: { display: false }, ticks: { color: cssVar('--muted-gray'), font: { size: 10 } } },
+                    y: { grid: { color: cssVar('--bg-items') }, ticks: { color: cssVar('--muted-gray'), font: { size: 10 } } }
                 }
             }
         });
+    }
+
+    // dipanggil tiap ganti tema (base/accent) biar chart ikut update warnanya
+    // tanpa perlu refresh & tanpa perlu ambil ulang data dari server
+    function refreshChartTheme() {
+        if (!myChart || !lastChartData) return;
+
+        const ctx = myChart.ctx;
+        const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+        gradient.addColorStop(0, hexToRgba(cssVar('--accent-primary'), 0.3));
+        gradient.addColorStop(1, hexToRgba(cssVar('--accent-primary'), 0));
+
+        const ds = myChart.data.datasets[0];
+        ds.borderColor = cssVar('--accent-primary');
+        ds.backgroundColor = gradient;
+        ds.pointBackgroundColor = cssVar('--accent-primary');
+
+        myChart.options.scales.x.ticks.color = cssVar('--muted-gray');
+        myChart.options.scales.y.ticks.color = cssVar('--muted-gray');
+        myChart.options.scales.y.grid.color = cssVar('--bg-items');
+
+        myChart.update();
     }
 
     function updateChartPeriod(period, element) {
@@ -754,8 +1395,8 @@
         } else if (period === '1Y') {
             startDate.setFullYear(now.getFullYear() - 1);
         } else if (period === 'CUSTOM') {
-            const sVal = document.getElementById('chartStart').value;
-            const eVal = document.getElementById('chartEnd').value;
+            const sVal = getPickerDateValue('chartStart');
+            const eVal = getPickerDateValue('chartEnd');
             if (!sVal || !eVal) return; // Tunggu sampai kedua tanggal diisi
             startDate = new Date(sVal);
             endDate = new Date(eVal);
@@ -775,6 +1416,8 @@
 
         if (chartData.length > 0) initChart(chartData);
     }
+
+    function updateChartPeriodCustom(){ updateChartPeriod('CUSTOM'); }
 
     function updateSummary(data) {
 
@@ -821,11 +1464,11 @@
     const rowsPerPage = 20;
 
     function applyCanggih() {
-        const dateMin = document.getElementById('fDateMin').value;
-        const dateMax = document.getElementById('fDateMax').value;
-        const timeMin = document.getElementById('fTimeMin').value;
-        const timeMax = document.getElementById('fTimeMax').value;
-        const fJenis = document.getElementById('fJenis').value;
+        const dateMin = getPickerDateValue('fDateMin');
+        const dateMax = getPickerDateValue('fDateMax');
+        const timeMin = getPickerTimeValue('fTimeMin');
+        const timeMax = getPickerTimeValue('fTimeMax');
+        const fJenisArr = Array.from(document.querySelectorAll('.jenisCheck:checked')).map(cb => cb.value);
         const fKet = document.getElementById('fKet').value.toLowerCase();
         const saldoMin = parseFloat(document.getElementById('fSaldoMin').value) || -Infinity;
         const saldoMax = parseFloat(document.getElementById('fSaldoMax').value) || Infinity;
@@ -841,7 +1484,7 @@
                             (timeMax ? rowTime <= timeMax : true);
 
             // Logika Filter Jenis & Keterangan
-            const matchJenis = fJenis ? r[2] === fJenis : true;
+            const matchJenis = fJenisArr.length === 0 || fJenisArr.includes(r[2]);
             const matchKet = fKet ? r[3].toLowerCase().includes(fKet) : true;
 
             // Logika Filter Saldo (r[6])
@@ -868,18 +1511,61 @@
 
     async function loadTableData() {
         const tbody = document.getElementById('tableBody');
+        
+        // 1. Loading state untuk Tabel
         tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:20px;">Memuat Data...</td></tr>';
+        
+        // 2. Loading state untuk Summary Saldo
+        document.getElementById('sumMasuk').innerText = 'Memuat...';
+        document.getElementById('sumKeluar').innerText = 'Memuat...';
+        document.getElementById('sumSelisih').innerText = 'Memuat...';
+        document.getElementById('selisihCard').classList.remove('positive', 'negative', 'zero');
+        
+        // 3. Loading state untuk Chart
+        if (myChart) myChart.destroy(); // Hilangkan grafik lama saat loading
+        const chartContainer = document.getElementById('financeChart').parentElement;
+        let chartOverlay = document.getElementById('chartLoadingOverlay');
+        
+        // Buat elemen teks loading otomatis di tengah chart jika belum ada
+        if (!chartOverlay) {
+            chartOverlay = document.createElement('div');
+            chartOverlay.id = 'chartLoadingOverlay';
+            chartOverlay.style.cssText = 'position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); color:var(--label-gray); font-weight:700; font-size:12px; text-align:center; pointer-events:none;';
+            chartContainer.appendChild(chartOverlay);
+        }
+        chartOverlay.innerText = 'Memuat Grafik...';
+        chartOverlay.style.color = 'var(--label-gray)';
+        chartOverlay.style.display = 'block';
+
         try {
             const res = await fetch(WEB_APP_URL);
             const json = await res.json();
             fullData = json.allData;
+            
             renderCanggih([...fullData].reverse());
             updateSummary(fullData);
+            
+            // Sembunyikan teks loading grafik karena datanya sudah siap dirender
+            if (chartOverlay) chartOverlay.style.display = 'none';
+            
             setTimeout(() => {
                 updateChartPeriod('1W'); 
             }, 100);
+            
             populateJenisFilter(fullData);
-        } catch (e) { tbody.innerHTML = '<tr><td colspan="7" style="color:red; text-align:center;">Gagal koneksi.</td></tr>'; }
+            
+        } catch (e) { 
+            // Tampilan jika gagal koneksi
+            tbody.innerHTML = '<tr><td colspan="7" style="color:var(--out-color); text-align:center;">Gagal koneksi.</td></tr>'; 
+            document.getElementById('sumMasuk').innerText = 'Error';
+            document.getElementById('sumKeluar').innerText = 'Error';
+            document.getElementById('sumSelisih').innerText = 'Error';
+            
+            if (chartOverlay) {
+                chartOverlay.innerText = 'Gagal memuat grafik.';
+                chartOverlay.style.color = 'var(--out-color)';
+            }
+        }
     }
 
     function toggleFilter() {
@@ -888,10 +1574,39 @@
     }
 
     function populateJenisFilter(data) {
-        const select = document.getElementById('fJenis');
+        const panel = document.getElementById('jenisDropdownPanel');
         const unik = [...new Set(data.map(r => r[2]))];
-        select.innerHTML = '<option value="">Semua</option>' + unik.map(j => `<option value="${j}">${j}</option>`).join('');
+        const checkboxes = unik.map(j => `
+            <label>
+                <input type="checkbox" class="jenisCheck" value="${j}" checked onchange="applyCanggih()">
+                <span>${j}</span>
+            </label>
+        `).join('');
+        panel.innerHTML = `
+            <div class="jenis-bulk-actions">
+                <button type="button" onclick="setAllJenis(true)">Pilih Semua</button>
+                <button type="button" onclick="setAllJenis(false)">Kosongkan</button>
+            </div>
+            ${checkboxes}
+        `;
     }
+
+    function setAllJenis(checked) {
+        document.querySelectorAll('.jenisCheck').forEach(cb => cb.checked = checked);
+        applyCanggih();
+    }
+
+    function toggleJenisDropdown() {
+        document.getElementById('jenisDropdownPanel').classList.toggle('open');
+    }
+
+    // biar panel nutup pas klik di luar area dropdown
+    document.addEventListener('click', (e) => {
+        const panel = document.getElementById('jenisDropdownPanel');
+        if (panel && !e.target.closest('th') && panel.classList.contains('open')) {
+            panel.classList.remove('open');
+        }
+    });
 
     function renderCanggih(data) {
 
@@ -904,28 +1619,27 @@
 
         document.getElementById('tableBody').innerHTML =
             paginatedData.map(r => {
-
                 let tglTampil = r[0];
-
                 if (tglTampil.includes('-')) {
                     tglTampil = tglTampil.split('-').reverse().join('/');
                 }
 
+                // LOGIKA TAMPILAN MODE SELECT
+                const rowIdx = r[7]; // Indeks baris asli dari spreadsheet
+                const isSelected = selectedRows.includes(rowIdx);
+                const trCursor = isSelectMode ? "cursor: pointer;" : "";
+                const trBg = isSelected ? "background: var(--out-color); -webkit-tap-highlight-color: transparent;" : "";
+
                 return `
-                <tr style="border-bottom: 1px solid #333;">
+                <tr style="border-bottom: 1px solid var(--bg-items); transition: 0.2s; -webkit-tap-highlight-color: transparent; ${trCursor} ${trBg}" 
+                    onclick="${isSelectMode ? `toggleRowSelection(${rowIdx})` : ''}">
                     <td style="padding: 8px;">${tglTampil}</td>
                     <td style="padding: 8px;">${r[1]}</td>
                     <td style="padding: 8px;">${r[2]}</td>
                     <td style="padding: 8px;">${r[3]}</td>
-                    <td style="padding: 8px; color:var(--in-color)">
-                        ${r[4] != "0" ? r[4] : ''}
-                    </td>
-                    <td style="padding: 8px; color:var(--out-color)">
-                        ${r[5] != "0" ? r[5] : ''}
-                    </td>
-                    <td style="padding: 8px; font-weight:bold;">
-                        ${r[6]}
-                    </td>
+                    <td style="padding: 8px; color:var(--in-color)">${r[4] != "0" ? r[4] : ''}</td>
+                    <td style="padding: 8px; color:var(--out-color)">${r[5] != "0" ? r[5] : ''}</td>
+                    <td style="padding: 8px; font-weight:bold;">${r[6]}</td>
                 </tr>
                 `;
             }).join('');
@@ -978,6 +1692,312 @@ function showToast(msg) {
         t.classList.remove("show");
         setTimeout(() => t.remove(), 300);
     }, 2000);
+}
+
+function toggleSelectMode() {
+    isSelectMode = !isSelectMode;
+    selectedRows = []; // Reset pilihan setiap masuk/keluar mode
+    
+    const btnSelect = document.getElementById('btnSelectMode');
+    const btnDelete = document.getElementById('btnDeleteSelected');
+    
+    if (isSelectMode) {
+        btnSelect.style.background = "var(--accent-primary)";
+        btnSelect.style.color = "black";
+        btnSelect.innerText = "BATALKAN PILIHAN";
+        btnDelete.style.display = "inline-block";
+    } else {
+        btnSelect.style.background = "var(--btn-gray)";
+        btnSelect.style.color = "white";
+        btnSelect.innerText = "PILIH DATA";
+        btnDelete.style.display = "none";
+    }
+    
+    updateDeleteButton();
+    renderCanggih(currentFilteredData); // Render ulang tabel untuk memunculkan checkbox
+}
+
+function toggleRowSelection(rowIdx) {
+    if (!isSelectMode) return;
+    
+    const index = selectedRows.indexOf(rowIdx);
+    if (index > -1) {
+        selectedRows.splice(index, 1); // Hapus centang
+    } else {
+        selectedRows.push(rowIdx); // Tambah centang
+    }
+    
+    updateDeleteButton();
+    renderCanggih(currentFilteredData); // Render ulang tabel agar sorotan dan checkbox terupdate
+}
+
+function updateDeleteButton() {
+    const btnDelete = document.getElementById('btnDeleteSelected');
+    btnDelete.innerText = `HAPUS DATA (${selectedRows.length})`;
+    btnDelete.disabled = selectedRows.length === 0;
+    btnDelete.style.opacity = selectedRows.length === 0 ? "0.5" : "1";
+}
+
+// --- CUSTOM ALERT LOGIC ---
+function showCustomAlert() {
+    if (selectedRows.length === 0) return;
+    document.getElementById('alertMessage').innerText = `Yakin ingin menghapus ${selectedRows.length} data yang dipilih?`;
+    
+    const overlay = document.getElementById('customAlertOverlay');
+    const box = document.getElementById('customAlertBox');
+    overlay.style.display = 'flex';
+    setTimeout(() => {
+        overlay.style.opacity = '1';
+        box.style.transform = 'scale(1)';
+    }, 10);
+}
+
+function closeCustomAlert() {
+    const overlay = document.getElementById('customAlertOverlay');
+    const box = document.getElementById('customAlertBox');
+    overlay.style.opacity = '0';
+    box.style.transform = 'scale(0.8)';
+    setTimeout(() => { overlay.style.display = 'none'; }, 300);
+}
+
+async function executeDelete() {
+    const btnConfirm = document.getElementById('btnConfirmDelete');
+    const originalText = btnConfirm.innerText;
+    btnConfirm.innerText = "MENGHAPUS...";
+    btnConfirm.disabled = true;
+
+    const formData = new URLSearchParams();
+    formData.append('aksi', 'delete');
+    formData.append('rows', selectedRows.join(',')); // Kirim baris contoh: "10,12,15"
+
+    try {
+        await fetch(WEB_APP_URL, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: formData.toString()
+        });
+
+        closeCustomAlert();
+        showToast("Data berhasil dihapus!");
+        
+        // Matikan mode select & muat ulang data dari awal
+        toggleSelectMode(); 
+        loadTableData(); 
+
+        setTimeout(() => {
+            updateSaldoHeader();
+        }, 500);
+        
+    } catch (err) {
+        showToast("Gagal menghapus data.");
+    } finally {
+        btnConfirm.innerText = originalText;
+        btnConfirm.disabled = false;
+    }
+}
+
+// ============ CUSTOM DATE & TIME PICKER (generik, dipakai fDateMin/Max & fTimeMin/Max) ============
+const BULAN_PICKER = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+const DOW_PICKER = ['Min','Sen','Sel','Rab','Kam','Jum','Sab'];
+const pickerData = {};
+
+function ensurePickerData(key, type){
+    if (pickerData[key]) return;
+    const now = new Date();
+    pickerData[key] = type === 'date'
+        ? { confirmedDate: null, tempDate: null, viewMonth: now.getMonth(), viewYear: now.getFullYear() }
+        : { confirmedHour: null, confirmedMinute: null, tempHour: now.getHours(), tempMinute: now.getMinutes(), mode: 'hour' };
+}
+
+function togglePicker(el, ev){
+    ev.stopPropagation();
+    const field = el.closest('.picker-field');
+    const panel = field.querySelector('.picker-panel');
+    const willOpen = !panel.classList.contains('open');
+    document.querySelectorAll('.picker-panel').forEach(p => p.classList.remove('open'));
+    if (!willOpen) return;
+    panel.classList.add('open');
+
+    const key = field.dataset.field, type = field.dataset.type;
+    ensurePickerData(key, type);
+    const s = pickerData[key];
+
+    if (type === 'date'){
+        s.tempDate = s.confirmedDate;
+        if (s.confirmedDate){ s.viewMonth = s.confirmedDate.getMonth(); s.viewYear = s.confirmedDate.getFullYear(); }
+        renderCalendarFor(field);
+    } else {
+        s.tempHour = s.confirmedHour ?? new Date().getHours();
+        s.tempMinute = s.confirmedMinute ?? new Date().getMinutes();
+        s.mode = 'hour';
+        renderClockFor(field);
+    }
+}
+document.addEventListener('click', () => document.querySelectorAll('.picker-panel').forEach(p => p.classList.remove('open')));
+document.querySelectorAll('.picker-panel').forEach(p => p.addEventListener('click', e => e.stopPropagation()));
+function cancelPicker(el){ el.closest('.picker-panel').classList.remove('open'); }
+
+// ---------- kalender ----------
+function renderCalendarFor(field){
+    const s = pickerData[field.dataset.field];
+    field.querySelector('.cal-title').innerText = `${BULAN_PICKER[s.viewMonth]} ${s.viewYear}`;
+    const grid = field.querySelector('.cal-grid');
+    const firstDow = new Date(s.viewYear, s.viewMonth, 1).getDay();
+    const totalDays = new Date(s.viewYear, s.viewMonth + 1, 0).getDate();
+    const today = new Date();
+    let html = DOW_PICKER.map(d => `<div class="cal-dow">${d}</div>`).join('');
+    for (let i = 0; i < firstDow; i++) html += `<div class="cal-day empty"></div>`;
+    for (let d = 1; d <= totalDays; d++){
+        const isToday = d === today.getDate() && s.viewMonth === today.getMonth() && s.viewYear === today.getFullYear();
+        const isSelected = s.tempDate && d === s.tempDate.getDate() && s.viewMonth === s.tempDate.getMonth() && s.viewYear === s.tempDate.getFullYear();
+        html += `<div class="cal-day ${isToday?'today':''} ${isSelected?'selected':''}" onclick="pickDay(this, ${d})">${d}</div>`;
+    }
+    grid.innerHTML = html;
+}
+function changeMonth(el, dir){
+    const field = el.closest('.picker-field');
+    const s = pickerData[field.dataset.field];
+    const grid = field.querySelector('.cal-grid');
+    grid.style.opacity = '0';
+    setTimeout(() => {
+        s.viewMonth += dir;
+        if (s.viewMonth > 11){ s.viewMonth = 0; s.viewYear++; }
+        if (s.viewMonth < 0){ s.viewMonth = 11; s.viewYear--; }
+        renderCalendarFor(field);
+        requestAnimationFrame(() => { grid.style.opacity = '1'; });
+    }, 120);
+}
+function pickDay(el, d){
+    const field = el.closest('.picker-field');
+    const s = pickerData[field.dataset.field];
+    s.tempDate = new Date(s.viewYear, s.viewMonth, d);
+    renderCalendarFor(field);
+}
+function confirmDatePicker(el){
+    const field = el.closest('.picker-field');
+    const s = pickerData[field.dataset.field];
+    s.confirmedDate = s.tempDate;
+    if (s.confirmedDate){
+        const dd = String(s.confirmedDate.getDate()).padStart(2,'0');
+        const mm = String(s.confirmedDate.getMonth() + 1).padStart(2,'0');
+        field.querySelector('.picker-label').innerText = `${dd}/${mm}/${s.confirmedDate.getFullYear()}`;
+    }
+    field.querySelector('.picker-panel').classList.remove('open');
+    if (field.dataset.onconfirm) window[field.dataset.onconfirm]?.();
+}
+
+// ---------- jam (dial 24 jam, dual ring) ----------
+function setTimeMode(el, mode){
+    const field = el.closest('.picker-field');
+    pickerData[field.dataset.field].mode = mode;
+    renderClockFor(field);
+}
+function renderClockFor(field){
+    const s = pickerData[field.dataset.field];
+    field.querySelector('.hour-num').innerText = String(s.tempHour).padStart(2,'0');
+    field.querySelector('.min-num').innerText = String(s.tempMinute).padStart(2,'0');
+    field.querySelector('.hour-num').classList.toggle('active', s.mode === 'hour');
+    field.querySelector('.min-num').classList.toggle('active', s.mode === 'minute');
+    const face = field.querySelector('.clock-face');
+    face.querySelectorAll('.clock-num').forEach(el => el.remove());
+    const cx = 95, cy = 95, R_OUTER = 68, R_INNER = 42;
+    if (s.mode === 'hour'){
+        for (let i = 0; i < 12; i++){
+            const rad = (i * 30 - 90) * Math.PI / 180;
+            const outerVal = i === 0 ? 12 : i, innerVal = i === 0 ? 0 : i + 12;
+            addClockNum(face, cx + R_OUTER*Math.cos(rad), cy + R_OUTER*Math.sin(rad), outerVal, 'outer', outerVal === s.tempHour);
+            addClockNum(face, cx + R_INNER*Math.cos(rad), cy + R_INNER*Math.sin(rad), String(innerVal).padStart(2,'0'), 'inner', innerVal === s.tempHour);
+        }
+    } else {
+        for (let i = 0; i < 12; i++){
+            const rad = (i * 30 - 90) * Math.PI / 180;
+            const val = i * 5;
+            addClockNum(face, cx + R_OUTER*Math.cos(rad), cy + R_OUTER*Math.sin(rad), String(val).padStart(2,'0'), 'outer', val === s.tempMinute);
+        }
+    }
+    updateHandFor(field);
+}
+function addClockNum(face, x, y, label, ringClass, isSelected){
+    const num = document.createElement('div');
+    num.className = `clock-num ${ringClass}` + (isSelected ? ' selected' : '');
+    num.style.left = x + 'px'; num.style.top = y + 'px';
+    num.innerText = label;
+    num.onclick = (e) => { e.stopPropagation(); selectClockValue(face, typeof label === 'number' ? label : parseInt(label, 10)); };
+    face.appendChild(num);
+}
+function updateHandFor(field){
+    const s = pickerData[field.dataset.field];
+    const hand = field.querySelector('.clock-hand');
+    let angleDeg, len;
+    if (s.mode === 'hour'){
+        const isInner = s.tempHour === 0 || s.tempHour >= 13;
+        angleDeg = (s.tempHour % 12) * 30;
+        len = isInner ? 42 : 68;
+    } else { angleDeg = s.tempMinute * 6; len = 68; }
+    hand.style.height = len + 'px';
+    hand.style.transform = `rotate(${angleDeg}deg)`;
+}
+function selectClockValue(face, value){
+    const field = face.closest('.picker-field');
+    const s = pickerData[field.dataset.field];
+    if (s.mode === 'hour'){
+        s.tempHour = value;
+        renderClockFor(field);
+        setTimeout(() => setTimeMode(field.querySelector('.hour-num'), 'minute'), 180);
+    } else { s.tempMinute = value; renderClockFor(field); }
+}
+function clockClick(face, e){
+    e.stopPropagation();
+    const field = face.closest('.picker-field');
+    const s = pickerData[field.dataset.field];
+    const rect = face.getBoundingClientRect();
+    const x = e.clientX - rect.left - rect.width/2, y = e.clientY - rect.top - rect.height/2;
+    const dist = Math.sqrt(x*x + y*y);
+    let angle = (Math.atan2(y, x) * 180/Math.PI + 90 + 360) % 360;
+    if (s.mode === 'hour'){
+        let idx = Math.round(angle/30) % 12;
+        const value = dist >= 55 ? (idx === 0 ? 12 : idx) : (idx === 0 ? 0 : idx + 12);
+        selectClockValue(face, value);
+    } else {
+        s.tempMinute = Math.round(angle/6) % 60;
+        renderClockFor(field);
+    }
+}
+function confirmTimePicker(el){
+    const field = el.closest('.picker-field');
+    const s = pickerData[field.dataset.field];
+    s.confirmedHour = s.tempHour; s.confirmedMinute = s.tempMinute;
+    field.querySelector('.picker-label').innerText = `${String(s.confirmedHour).padStart(2,'0')}:${String(s.confirmedMinute).padStart(2,'0')}`;
+    field.querySelector('.picker-panel').classList.remove('open');
+    if (field.dataset.onconfirm) window[field.dataset.onconfirm]?.();
+}
+
+// ---------- value final buat applyCanggih() ----------
+function getPickerDateValue(key){
+    const d = pickerData[key]?.confirmedDate;
+    if (!d) return '';
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function getPickerTimeValue(key){
+    const s = pickerData[key];
+    if (!s || s.confirmedHour == null) return '';
+    return `${String(s.confirmedHour).padStart(2,'0')}:${String(s.confirmedMinute).padStart(2,'0')}`;
+}
+
+function clearPicker(el){
+    const field = el.closest('.picker-field');
+    const key = field.dataset.field;
+    const type = field.dataset.type;
+    const placeholder = field.dataset.placeholder || (type === 'date' ? 'dd/mm/yyyy' : '--:--');
+
+    if (pickerData[key]){
+        if (type === 'date'){ pickerData[key].confirmedDate = null; pickerData[key].tempDate = null; }
+        else { pickerData[key].confirmedHour = null; pickerData[key].confirmedMinute = null; }
+    }
+    field.querySelector('.picker-label').innerText = placeholder;
+    field.querySelector('.picker-panel').classList.remove('open');
+    if (field.dataset.onconfirm) window[field.dataset.onconfirm]?.();
 }
 
 </script>
